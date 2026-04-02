@@ -752,7 +752,13 @@ function applyCurrentUser() {
 let currentView = 'home';
 
 function showView(viewName, linkEl) {
-  // hide all views
+  // Protected views require login
+  const protectedViews = ['following','bookmarks','notifications'];
+  if (!currentUser && protectedViews.includes(viewName)) {
+    requireAuth();
+    return;
+  }
+
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
 
@@ -760,10 +766,7 @@ function showView(viewName, linkEl) {
   if (linkEl) linkEl.classList.add('active');
   currentView = viewName;
 
-  // Mark notifications read when opening that view
-  if (viewName === 'notifications') {
-    markNotifsRead();
-  }
+  if (viewName === 'notifications') markNotifsRead();
 
   renderCurrentView();
 }
@@ -1145,36 +1148,41 @@ document.getElementById('removePhoto').addEventListener('click', () => {
 });
 
 document.getElementById('postBtn').addEventListener('click', () => {
-  if (!currentUser) { showToast('Sign in to post!', 'warn'); return; }
+  if (!currentUser) { requireAuth(); return; }
   const content = document.getElementById('postMessage').value.trim();
   if (!content && !selectedPhoto) { showToast('Write something before posting!', 'warn'); return; }
 
-  const post = {
-    id: 'post_' + Date.now(),
-    authorId: currentUser.id,
-    author: currentUser.name,
-    dept: currentUser.major || 'Student',
-    content,
-    photo: selectedPhoto,
-    avatarColor: currentUser.avatarColor,
-    ts: Date.now(),
-    likes: 0,
-    likedBy: [],
-    bookmarkedBy: [],
-    comments: [],
-    tags: []
-  };
-  const posts = getPosts();
-  posts.push(post);
-  savePosts(posts);
-  renderHomePosts();
+  try {
+    const post = {
+      id: 'post_' + Date.now(),
+      authorId: currentUser.id,
+      author: currentUser.name,
+      dept: currentUser.major || 'Student',
+      content,
+      photo: selectedPhoto,
+      avatarColor: currentUser.avatarColor,
+      ts: Date.now(),
+      likes: 0,
+      likedBy: [],
+      bookmarkedBy: [],
+      comments: [],
+      tags: []
+    };
+    const posts = getPosts();
+    posts.push(post);
+    savePosts(posts);
+    renderHomePosts();
 
-  document.getElementById('postMessage').value = '';
-  document.getElementById('photoPreview').src = '';
-  document.getElementById('photoPreviewWrap').classList.remove('has-image');
-  selectedPhoto = null;
-  document.getElementById('photo-input').value = '';
-  showToast('Post shared! 🐾');
+    document.getElementById('postMessage').value = '';
+    document.getElementById('photoPreview').src = '';
+    document.getElementById('photoPreviewWrap').classList.remove('has-image');
+    selectedPhoto = null;
+    document.getElementById('photo-input').value = '';
+    showToast('Post shared! 🐾');
+  } catch(err) {
+    console.error('Post error:', err);
+    showToast('Something went wrong. Please try again.', 'warn');
+  }
 });
 
 document.getElementById('postMessage').addEventListener('keydown', e => {
@@ -1375,21 +1383,31 @@ function seedDefaultPost() {
 // ═══════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════
+function requireAuth() {
+  document.getElementById('authModal').classList.remove('hidden');
+}
+
 function init() {
-  seedDefaultPost();
+  try {
+    seedDefaultPost();
 
-  const session = getSession();
-  if (session) {
-    const users = getUsers();
-    currentUser = users.find(u => u.id === session.userId) || null;
-  }
+    const session = getSession();
+    if (session) {
+      const users = getUsers();
+      currentUser = users.find(u => u.id === session.userId) || null;
+    }
 
-  if (!currentUser) {
-    document.getElementById('authModal').classList.remove('hidden');
-  } else {
-    applyCurrentUser();
-    updateNotifBadge();
+    // Always render feed so content is visible
     renderHomePosts();
+
+    if (!currentUser) {
+      document.getElementById('authModal').classList.remove('hidden');
+    } else {
+      applyCurrentUser();
+      updateNotifBadge();
+    }
+  } catch(err) {
+    console.error('UCConnect init error:', err);
   }
 }
 
