@@ -352,12 +352,23 @@ let lastPeerCount = 0;
 
 // ─── INIT ───
 function init() {
-  profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null');
+  // Try new auth session first, fall back to legacy profile key
+  const session = JSON.parse(localStorage.getItem('ucconnect_session') || 'null');
+  if (session) {
+    const users = JSON.parse(localStorage.getItem('ucconnect_users') || '[]');
+    const user  = users.find(u => u.id === session.userId);
+    if (user) {
+      profile = { name: user.name, major: user.major, year: user.year, avatarColor: user.avatarColor };
+    }
+  }
+  if (!profile) profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null');
+
   if (profile) {
     const init = profile.name.charAt(0).toUpperCase();
-    document.getElementById('navAvatar').textContent   = init;
-    document.getElementById('navName').textContent     = profile.name;
-    document.getElementById('navRole').textContent     = profile.major || 'UC Student';
+    document.getElementById('navAvatar').textContent      = init;
+    document.getElementById('navAvatar').style.background = profile.avatarColor || '#E00122';
+    document.getElementById('navName').textContent        = profile.name;
+    document.getElementById('navRole').textContent        = profile.major || 'UC Student';
   }
   // Load AI history
   const saved = localStorage.getItem(AI_HIST_KEY);

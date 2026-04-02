@@ -28,12 +28,13 @@
     /* ── LEFT NAV ── */
     .left-panel { width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 4px; padding: 24px 16px; position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--white); border-right: 1px solid var(--gray-200); }
     .logo-wrap { display: flex; align-items: center; gap: 10px; padding: 0 10px 20px; border-bottom: 1px solid var(--gray-200); margin-bottom: 8px; }
+    .logo-img { width: 36px; height: 36px; border-radius: 10px; object-fit: contain; flex-shrink: 0; display: none; }
     .logo-icon { width: 36px; height: 36px; background: var(--red); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-family: var(--font-display); font-weight: 800; font-size: 14px; flex-shrink: 0; letter-spacing: -1px; }
     .logo-text { font-family: var(--font-display); font-weight: 800; font-size: 17px; letter-spacing: -0.5px; line-height: 1.1; }
     .logo-text span { color: var(--red); }
     .logo-sub { font-size: 10px; color: var(--gray-400); margin-top: 1px; }
     .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--gray-400); padding: 10px 12px 4px; }
-    .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: var(--radius-md); color: var(--gray-700); text-decoration: none; font-size: 14px; font-weight: 500; transition: var(--t); }
+    .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: var(--radius-md); color: var(--gray-700); text-decoration: none; font-size: 14px; font-weight: 500; transition: var(--t); cursor: pointer; }
     .nav-link i { width: 17px; text-align: center; font-size: 14px; color: var(--gray-400); transition: var(--t); }
     .nav-link:hover { background: var(--gray-100); color: var(--black); }
     .nav-link:hover i { color: var(--red); }
@@ -47,8 +48,12 @@
     .profile-name-text { font-size: 13px; font-weight: 600; line-height: 1.2; }
     .profile-role-text { font-size: 11px; color: var(--gray-400); }
 
-    /* ── MAIN FEED ── */
-    .main-feed { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 24px; max-width: 740px; }
+    /* ── MAIN CONTENT (SPA views host) ── */
+    .main-content { flex: 1; min-width: 0; display: flex; position: relative; }
+    .view { display: none; flex-direction: column; padding: 24px; max-width: 740px; width: 100%; }
+    .view.active { display: flex; }
+
+    /* ── FEED HEADER ── */
     .feed-header { margin-bottom: 20px; }
     .feed-header h1 { font-family: var(--font-display); font-size: 24px; font-weight: 800; letter-spacing: -0.8px; }
     .feed-header h1 span { color: var(--red); }
@@ -98,6 +103,9 @@
     .post-author { font-size: 14px; font-weight: 600; line-height: 1.2; }
     .post-time { font-size: 11px; color: var(--gray-400); }
     .post-dept { font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; background: var(--red-soft); color: var(--red); padding: 3px 8px; border-radius: 20px; }
+    .follow-btn { padding: 4px 12px; border-radius: 20px; border: 1.5px solid var(--red); background: transparent; color: var(--red); font-family: var(--font-body); font-size: 11px; font-weight: 600; cursor: pointer; transition: var(--t); white-space: nowrap; }
+    .follow-btn:hover, .follow-btn.following { background: var(--red); color: white; }
+    .follow-btn.following:hover { background: var(--red-dark); border-color: var(--red-dark); }
     .post-body { font-size: 14px; line-height: 1.65; color: var(--gray-700); margin-bottom: 12px; }
     .post-image { width: 100%; max-height: 320px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--gray-200); margin-bottom: 12px; }
     .post-footer { display: flex; align-items: center; gap: 2px; padding-top: 10px; border-top: 1px solid var(--gray-100); }
@@ -124,9 +132,15 @@
     .comment-submit { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--red); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: var(--t); flex-shrink: 0; }
     .comment-submit:hover { background: var(--red-dark); }
     .no-comments { font-size: 12px; color: var(--gray-400); text-align: center; padding: 10px 0; }
+
+    /* EMPTY STATE */
     .empty-state { text-align: center; padding: 50px 20px; color: var(--gray-400); }
     .empty-state i { font-size: 34px; margin-bottom: 10px; display: block; opacity: 0.25; }
     .empty-state p { font-size: 13px; }
+    .view-empty { text-align: center; padding: 60px 20px; }
+    .view-empty i { font-size: 42px; margin-bottom: 14px; display: block; opacity: 0.15; color: var(--black); }
+    .view-empty h3 { font-family: var(--font-display); font-size: 20px; margin-bottom: 6px; }
+    .view-empty p { font-size: 13px; color: var(--gray-400); }
 
     /* ── RIGHT PANEL ── */
     .right-panel { width: 290px; flex-shrink: 0; display: flex; flex-direction: column; gap: 14px; padding: 24px 16px; height: 100vh; overflow-y: auto; position: sticky; top: 0; }
@@ -158,25 +172,76 @@
     .uc-banner h3 { font-family: var(--font-display); font-size: 16px; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 5px; }
     .uc-banner p { font-size: 12px; opacity: 0.8; line-height: 1.5; }
 
-    /* ── PROFILE MODAL ── */
+    /* ── MODALS ── */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: center; justify-content: center; }
     .modal-overlay.hidden { display: none; }
-    .modal-card { background: var(--white); border-radius: 24px; padding: 36px; width: 420px; max-width: 90vw; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .modal-card { background: var(--white); border-radius: 24px; padding: 36px; width: 440px; max-width: 90vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
     .modal-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
     .modal-logo-icon { width: 40px; height: 40px; background: var(--red); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-family: var(--font-display); font-weight: 800; font-size: 15px; }
     .modal-logo-text { font-family: var(--font-display); font-weight: 800; font-size: 20px; }
     .modal-logo-text span { color: var(--red); }
-    .modal-card h2 { font-family: var(--font-display); font-size: 22px; font-weight: 800; margin-bottom: 6px; }
-    .modal-card p { font-size: 13px; color: var(--gray-400); margin-bottom: 24px; }
     .form-group { margin-bottom: 14px; }
     .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-700); margin-bottom: 5px; letter-spacing: 0.3px; }
-    .form-group input, .form-group select { width: 100%; padding: 10px 14px; border: 1.5px solid var(--gray-200); border-radius: var(--radius-md); font-family: var(--font-body); font-size: 14px; outline: none; transition: var(--t); background: var(--gray-100); }
-    .form-group input:focus, .form-group select:focus { border-color: var(--red); background: var(--white); }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 14px; border: 1.5px solid var(--gray-200); border-radius: var(--radius-md); font-family: var(--font-body); font-size: 14px; outline: none; transition: var(--t); background: var(--gray-100); }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--red); background: var(--white); }
+    .form-group textarea { resize: none; height: 78px; line-height: 1.5; }
     .modal-submit { width: 100%; height: 44px; border-radius: var(--radius-md); border: none; background: var(--red); color: white; font-family: var(--font-body); font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px; transition: var(--t); }
     .modal-submit:hover { background: var(--red-dark); }
+    .modal-close-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+    .modal-close-row h2 { font-family: var(--font-display); font-size: 22px; font-weight: 800; }
+    .close-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--gray-100); color: var(--gray-700); cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; transition: var(--t); }
+    .close-btn:hover { background: var(--gray-200); }
+
+    /* AUTH TABS */
+    .auth-tabs { display: flex; border-bottom: 1px solid var(--gray-200); margin-bottom: 24px; }
+    .auth-tab { flex: 1; padding: 10px; border: none; background: transparent; font-family: var(--font-body); font-size: 14px; font-weight: 500; color: var(--gray-400); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: var(--t); }
+    .auth-tab.active { color: var(--red); border-bottom-color: var(--red); font-weight: 600; }
+    .auth-panel { display: none; }
+    .auth-panel.active { display: block; }
+    .auth-error { font-size: 12px; color: var(--red); margin-top: -8px; margin-bottom: 12px; display: none; }
+    .auth-error.visible { display: block; }
+
+    /* PROFILE SETTINGS */
+    .color-picker-row { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 6px; }
+    .color-swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: var(--t); flex-shrink: 0; }
+    .color-swatch.selected { border-color: var(--black); transform: scale(1.15); }
+    .logout-btn { width: 100%; height: 40px; border-radius: var(--radius-md); border: 1.5px solid var(--gray-200); background: transparent; color: var(--gray-700); font-family: var(--font-body); font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 8px; transition: var(--t); }
+    .logout-btn:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+
+    /* DEPARTMENTS VIEW */
+    .dept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+    .dept-card { background: var(--white); border-radius: var(--radius-lg); padding: 20px; border: 1px solid var(--gray-200); cursor: pointer; transition: var(--t); }
+    .dept-card:hover { border-color: var(--red); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .dept-card-icon { width: 42px; height: 42px; background: var(--red-soft); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--red); font-size: 18px; margin-bottom: 12px; }
+    .dept-card-name { font-family: var(--font-display); font-size: 13px; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
+    .dept-card-count { font-size: 12px; color: var(--gray-400); }
+
+    /* EVENTS VIEW */
+    .events-list { display: flex; flex-direction: column; gap: 12px; }
+    .event-card { background: var(--white); border-radius: var(--radius-lg); padding: 18px; border: 1px solid var(--gray-200); display: flex; gap: 16px; transition: var(--t); }
+    .event-card:hover { box-shadow: var(--shadow-md); }
+    .event-date-box { width: 54px; height: 58px; background: var(--red); border-radius: var(--radius-md); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; flex-shrink: 0; }
+    .event-date-month { font-size: 9px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; opacity: 0.85; }
+    .event-date-day { font-size: 24px; font-weight: 800; font-family: var(--font-display); line-height: 1; }
+    .event-info { flex: 1; min-width: 0; }
+    .event-tag { display: inline-block; background: var(--red-soft); color: var(--red); font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; margin-bottom: 6px; }
+    .event-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .event-meta { font-size: 12px; color: var(--gray-400); margin-bottom: 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .event-meta span { display: flex; align-items: center; gap: 4px; }
+    .event-desc { font-size: 13px; color: var(--gray-700); line-height: 1.5; }
+
+    /* NOTIFICATIONS VIEW */
+    .notifs-list { display: flex; flex-direction: column; gap: 8px; }
+    .notif-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: var(--white); border-radius: var(--radius-lg); border: 1px solid var(--gray-200); transition: var(--t); }
+    .notif-item.unread { border-left: 3px solid var(--red); background: var(--red-soft); }
+    .notif-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; flex-shrink: 0; }
+    .notif-body { flex: 1; }
+    .notif-text { font-size: 13px; line-height: 1.5; color: var(--black); }
+    .notif-snippet { font-size: 12px; color: var(--gray-400); margin-top: 2px; font-style: italic; }
+    .notif-time { font-size: 11px; color: var(--gray-400); margin-top: 3px; }
 
     /* ── TOAST ── */
-    .toast { position: fixed; bottom: 22px; right: 22px; background: var(--gray-900); color: white; padding: 11px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 500; box-shadow: 0 8px 30px rgba(0,0,0,0.2); transform: translateY(80px); opacity: 0; transition: 0.3s cubic-bezier(0.34,1.56,0.64,1); z-index: 100; display: flex; align-items: center; gap: 8px; }
+    .toast { position: fixed; bottom: 22px; right: 22px; background: var(--gray-900); color: white; padding: 11px 16px; border-radius: var(--radius-md); font-size: 13px; font-weight: 500; box-shadow: 0 8px 30px rgba(0,0,0,0.2); transform: translateY(80px); opacity: 0; transition: 0.3s cubic-bezier(0.34,1.56,0.64,1); z-index: 300; display: flex; align-items: center; gap: 8px; }
     .toast.show { transform: none; opacity: 1; }
     .toast i { color: #4ade80; }
     .toast.warn i { color: #fbbf24; }
@@ -191,7 +256,7 @@
       .profile-card { margin-top: 0; }
       .right-panel { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; }
       .widget-card, .uc-banner, .search-box { flex: 1; min-width: 180px; }
-      .main-feed { max-width: 100%; padding: 14px; }
+      .view { max-width: 100%; padding: 14px; }
     }
     @media (max-width: 600px) {
       .nav-link span { display: none; } .nav-link { padding: 9px; }
@@ -201,22 +266,115 @@
 </head>
 <body>
 
-<!-- ══ PROFILE MODAL ══ -->
-<div class="modal-overlay" id="profileModal">
+<!-- ══ AUTH MODAL ══ -->
+<div class="modal-overlay hidden" id="authModal">
   <div class="modal-card">
     <div class="modal-logo">
       <div class="modal-logo-icon">UC</div>
       <div class="modal-logo-text">UC<span>Connect</span></div>
     </div>
-    <h2>Welcome, Bearcat! 🐾</h2>
-    <p>Set up your profile to get started on campus.</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchAuthTab('signup')">Create Account</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="auth-panel active" id="loginPanel">
+      <p class="auth-error" id="loginError"></p>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="your@mail.uc.edu" onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <button class="modal-submit" onclick="doLogin()">Sign In</button>
+      <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--gray-400)">
+        No account? <span style="color:var(--red);cursor:pointer;font-weight:600" onclick="switchAuthTab('signup')">Create one</span>
+      </p>
+    </div>
+
+    <!-- SIGNUP -->
+    <div class="auth-panel" id="signupPanel">
+      <p class="auth-error" id="signupError"></p>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="signupName" placeholder="e.g. Bipran Rimal" />
+      </div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="signupUsername" placeholder="e.g. bipranr" />
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="signupEmail" placeholder="your@mail.uc.edu" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="signupPassword" placeholder="At least 6 characters" />
+      </div>
+      <div class="form-group">
+        <label>Program / Major</label>
+        <select id="signupMajor">
+          <option value="">Select your program...</option>
+          <option>Information Technology</option>
+          <option>Computer Science</option>
+          <option>Cybersecurity</option>
+          <option>Computer Engineering</option>
+          <option>Electrical Engineering</option>
+          <option>Mechanical Engineering</option>
+          <option>Business Administration</option>
+          <option>Nursing</option>
+          <option>Architecture</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Year</label>
+        <select id="signupYear">
+          <option value="">Select your year...</option>
+          <option>Freshman</option>
+          <option>Sophomore</option>
+          <option>Junior</option>
+          <option>Senior</option>
+          <option>Graduate Student</option>
+        </select>
+      </div>
+      <button class="modal-submit" onclick="doSignup()">Create Account</button>
+      <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--gray-400)">
+        Already have an account? <span style="color:var(--red);cursor:pointer;font-weight:600" onclick="switchAuthTab('login')">Sign in</span>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PROFILE SETTINGS MODAL ══ -->
+<div class="modal-overlay hidden" id="profileModal">
+  <div class="modal-card">
+    <div class="modal-close-row">
+      <h2>Edit Profile</h2>
+      <button class="close-btn" onclick="closeProfileModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="form-group">
+      <label>Avatar Color</label>
+      <div class="color-picker-row" id="colorPicker"></div>
+    </div>
     <div class="form-group">
       <label>Full Name</label>
-      <input type="text" id="profileName" placeholder="e.g. Bipran Rimal" />
+      <input type="text" id="editName" />
+    </div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="editUsername" />
+    </div>
+    <div class="form-group">
+      <label>Bio</label>
+      <textarea id="editBio" placeholder="Tell us a little about yourself..."></textarea>
     </div>
     <div class="form-group">
       <label>Program / Major</label>
-      <select id="profileMajor">
+      <select id="editMajor">
         <option value="">Select your program...</option>
         <option>Information Technology</option>
         <option>Computer Science</option>
@@ -225,12 +383,14 @@
         <option>Electrical Engineering</option>
         <option>Mechanical Engineering</option>
         <option>Business Administration</option>
+        <option>Nursing</option>
+        <option>Architecture</option>
         <option>Other</option>
       </select>
     </div>
     <div class="form-group">
       <label>Year</label>
-      <select id="profileYear">
+      <select id="editYear">
         <option value="">Select your year...</option>
         <option>Freshman</option>
         <option>Sophomore</option>
@@ -239,89 +399,135 @@
         <option>Graduate Student</option>
       </select>
     </div>
-    <button class="modal-submit" onclick="saveProfile()">Get Started</button>
+    <button class="modal-submit" onclick="saveProfileSettings()">Save Changes</button>
+    <button class="logout-btn" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket" style="margin-right:6px"></i>Log Out</button>
   </div>
 </div>
 
 <!-- ══ LEFT NAV ══ -->
 <aside class="left-panel">
   <div class="logo-wrap">
-    <div class="logo-icon">UC</div>
+    <img src="logo.png" id="logoImg" class="logo-img" onload="this.style.display='block'; document.getElementById('logoFallback').style.display='none'" onerror="this.style.display='none'" />
+    <div class="logo-icon" id="logoFallback">UC</div>
     <div>
       <div class="logo-text">UC<span>Connect</span></div>
       <div class="logo-sub">University of Cincinnati</div>
     </div>
   </div>
   <div class="nav-label">Main</div>
-  <a href="UCConnect.html" class="nav-link active"><i class="fa-solid fa-house"></i><span>Home</span></a>
-  <a href="following.html" class="nav-link"><i class="fa-solid fa-users"></i><span>Following</span></a>
+  <a class="nav-link active" id="nav-home" onclick="showView('home',this)"><i class="fa-solid fa-house"></i><span>Home</span></a>
+  <a class="nav-link" id="nav-following" onclick="showView('following',this)"><i class="fa-solid fa-users"></i><span>Following</span></a>
   <a href="messages.html" class="nav-link"><i class="fa-solid fa-envelope"></i><span>Messages</span><span class="nav-badge" id="msgBadge" style="display:none">!</span></a>
-  <a href="bookmarks.html" class="nav-link"><i class="fa-solid fa-bookmark"></i><span>Bookmarks</span></a>
+  <a class="nav-link" id="nav-bookmarks" onclick="showView('bookmarks',this)"><i class="fa-solid fa-bookmark"></i><span>Bookmarks</span></a>
   <div class="nav-label" style="margin-top:8px">Explore</div>
-  <a href="#" class="nav-link"><i class="fa-solid fa-graduation-cap"></i><span>Departments</span></a>
-  <a href="#" class="nav-link"><i class="fa-solid fa-calendar-days"></i><span>Campus Events</span></a>
-  <a href="#" class="nav-link"><i class="fa-solid fa-bell"></i><span>Notifications</span></a>
+  <a class="nav-link" id="nav-departments" onclick="showView('departments',this)"><i class="fa-solid fa-graduation-cap"></i><span>Departments</span></a>
+  <a class="nav-link" id="nav-events" onclick="showView('events',this)"><i class="fa-solid fa-calendar-days"></i><span>Campus Events</span></a>
+  <a class="nav-link" id="nav-notifications" onclick="showView('notifications',this)">
+    <i class="fa-solid fa-bell"></i><span>Notifications</span>
+    <span class="nav-badge" id="notifBadge" style="display:none">0</span>
+  </a>
   <div class="left-spacer"></div>
-  <a href="profile.html" class="profile-card">
-    <div class="avatar" id="navAvatar">?</div>
-    <div>
+  <div class="profile-card" onclick="openProfileModal(event)">
+    <div class="avatar" id="navAvatar" style="background:var(--red)">?</div>
+    <div style="min-width:0">
       <div class="profile-name-text" id="navName">Loading...</div>
       <div class="profile-role-text" id="navRole">UC Student</div>
     </div>
-    <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--gray-400);font-size:11px;"></i>
-  </a>
+    <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:var(--gray-400);font-size:11px;flex-shrink:0"></i>
+  </div>
 </aside>
 
-<!-- ══ MAIN FEED ══ -->
-<main class="main-feed">
-  <div class="feed-header">
-    <h1>Campus <span>Feed</span></h1>
-    <p>Stay up to date with what's happening around UC.</p>
-  </div>
+<!-- ══ MAIN CONTENT ══ -->
+<div class="main-content">
 
-  <!-- FILTER BAR -->
-  <div class="filter-bar" id="filterBar">
-    <span style="font-size:12px;font-weight:600;color:var(--gray-400);">Filter:</span>
-    <span class="filter-tag" onclick="filterByTag(this,'Cybersecurity')">#Cybersecurity</span>
-    <span class="filter-tag" onclick="filterByTag(this,'Networking')">#Networking</span>
-    <span class="filter-tag" onclick="filterByTag(this,'WebDev')">#WebDev</span>
-    <span class="filter-tag" onclick="filterByTag(this,'Campus')">#Campus</span>
-    <span class="filter-tag" onclick="filterByTag(this,'Events')">#Events</span>
-    <span class="filter-clear" id="filterClear" onclick="clearFilter()">Clear filter ×</span>
-  </div>
-
-  <!-- COMPOSER -->
-  <div class="composer">
-    <div class="composer-top">
-      <div class="composer-avatar" id="composerAvatar">?</div>
-      <textarea class="composer-input" id="postMessage" placeholder="What's happening on campus?" rows="3"></textarea>
+  <!-- HOME VIEW -->
+  <div class="view active" id="view-home">
+    <div class="feed-header">
+      <h1>Campus <span>Feed</span></h1>
+      <p>Stay up to date with what's happening around UC.</p>
     </div>
-    <div class="photo-preview-wrap" id="photoPreviewWrap">
-      <img id="photoPreview" src="" alt="Preview" />
-      <button class="remove-photo" id="removePhoto"><i class="fa-solid fa-xmark"></i></button>
+    <div class="filter-bar" id="filterBar">
+      <span style="font-size:12px;font-weight:600;color:var(--gray-400);">Filter:</span>
+      <span class="filter-tag" onclick="filterByTag(this,'Cybersecurity')">#Cybersecurity</span>
+      <span class="filter-tag" onclick="filterByTag(this,'Networking')">#Networking</span>
+      <span class="filter-tag" onclick="filterByTag(this,'WebDev')">#WebDev</span>
+      <span class="filter-tag" onclick="filterByTag(this,'Campus')">#Campus</span>
+      <span class="filter-tag" onclick="filterByTag(this,'Events')">#Events</span>
+      <span class="filter-clear" id="filterClear" onclick="clearFilter()">Clear filter ×</span>
     </div>
-    <div class="composer-divider"></div>
-    <div class="composer-actions">
-      <div class="composer-tools">
-        <button class="tool-btn" title="Add photo" onclick="document.getElementById('photo-input').click()"><i class="fa-solid fa-image"></i></button>
-        <button class="tool-btn" title="Tag"><i class="fa-solid fa-at"></i></button>
-        <button class="tool-btn" title="Hashtag"><i class="fa-solid fa-hashtag"></i></button>
+    <div class="composer">
+      <div class="composer-top">
+        <div class="composer-avatar" id="composerAvatar">?</div>
+        <textarea class="composer-input" id="postMessage" placeholder="What's happening on campus?" rows="3"></textarea>
       </div>
-      <button class="post-btn" id="postBtn"><i class="fa-solid fa-paper-plane"></i> Post</button>
+      <div class="photo-preview-wrap" id="photoPreviewWrap">
+        <img id="photoPreview" src="" alt="Preview" />
+        <button class="remove-photo" id="removePhoto"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="composer-divider"></div>
+      <div class="composer-actions">
+        <div class="composer-tools">
+          <button class="tool-btn" title="Add photo" onclick="document.getElementById('photo-input').click()"><i class="fa-solid fa-image"></i></button>
+          <button class="tool-btn" title="Tag"><i class="fa-solid fa-at"></i></button>
+          <button class="tool-btn" title="Hashtag"><i class="fa-solid fa-hashtag"></i></button>
+        </div>
+        <button class="post-btn" id="postBtn"><i class="fa-solid fa-paper-plane"></i> Post</button>
+      </div>
+      <input type="file" id="photo-input" accept="image/*" />
     </div>
-    <input type="file" id="photo-input" accept="image/*" />
+    <div class="feed-tabs">
+      <button class="tab-btn active" onclick="setHomeTab('all',this)">All Posts</button>
+      <button class="tab-btn" onclick="setHomeTab('dept',this)">My Department</button>
+    </div>
+    <div class="posts-container" id="postsContainer"></div>
   </div>
 
-  <!-- TABS -->
-  <div class="feed-tabs">
-    <button class="tab-btn active">All Posts</button>
-    <button class="tab-btn">My Department</button>
-    <button class="tab-btn">Following</button>
+  <!-- FOLLOWING VIEW -->
+  <div class="view" id="view-following">
+    <div class="feed-header">
+      <h1>Following <span>Feed</span></h1>
+      <p>Posts from people you follow.</p>
+    </div>
+    <div class="posts-container" id="followingContainer"></div>
   </div>
 
-  <!-- POSTS -->
-  <div class="posts-container" id="postsContainer"></div>
-</main>
+  <!-- BOOKMARKS VIEW -->
+  <div class="view" id="view-bookmarks">
+    <div class="feed-header">
+      <h1>Your <span>Bookmarks</span></h1>
+      <p>Posts you've saved for later.</p>
+    </div>
+    <div class="posts-container" id="bookmarksContainer"></div>
+  </div>
+
+  <!-- DEPARTMENTS VIEW -->
+  <div class="view" id="view-departments">
+    <div class="feed-header">
+      <h1>UC <span>Departments</span></h1>
+      <p>Browse posts by academic program. Click a department to explore.</p>
+    </div>
+    <div class="dept-grid" id="deptGrid"></div>
+  </div>
+
+  <!-- EVENTS VIEW -->
+  <div class="view" id="view-events">
+    <div class="feed-header">
+      <h1>Campus <span>Events</span></h1>
+      <p>Upcoming events and activities around UC.</p>
+    </div>
+    <div class="events-list" id="eventsList"></div>
+  </div>
+
+  <!-- NOTIFICATIONS VIEW -->
+  <div class="view" id="view-notifications">
+    <div class="feed-header">
+      <h1>Your <span>Notifications</span></h1>
+      <p>Recent activity on your posts.</p>
+    </div>
+    <div class="notifs-list" id="notifsList"></div>
+  </div>
+
+</div>
 
 <!-- ══ RIGHT PANEL ══ -->
 <aside class="right-panel">
@@ -329,13 +535,11 @@
     <i class="fa-solid fa-magnifying-glass"></i>
     <input type="text" id="searchInput" placeholder="Search posts..." />
   </div>
-
   <div class="uc-banner">
     <div class="uc-banner-label">University of Cincinnati</div>
     <h3>Bearcats Connect</h3>
     <p>Your campus. Your community. Stay connected with everything UC.</p>
   </div>
-
   <div class="widget-card">
     <div class="widget-header">
       <span class="widget-title">Trending on Campus</span>
@@ -344,29 +548,28 @@
     <div class="widget-body">
       <div class="tag-list">
         <div class="tag-item" onclick="filterByTagName('Cybersecurity')">
-          <div class="tag-left"><span class="tag-category">Information Technology</span><span class="tag-name">#Cybersecurity</span><span class="tag-count">142 posts</span></div>
+          <div class="tag-left"><span class="tag-category">Information Technology</span><span class="tag-name">#Cybersecurity</span></div>
           <i class="fa-solid fa-chevron-right" style="font-size:11px;color:var(--gray-400);"></i>
         </div>
         <div class="tag-item" onclick="filterByTagName('WebDev')">
-          <div class="tag-left"><span class="tag-category">Development</span><span class="tag-name">#WebDev</span><span class="tag-count">98 posts</span></div>
+          <div class="tag-left"><span class="tag-category">Development</span><span class="tag-name">#WebDev</span></div>
           <i class="fa-solid fa-chevron-right" style="font-size:11px;color:var(--gray-400);"></i>
         </div>
         <div class="tag-item" onclick="filterByTagName('Networking')">
-          <div class="tag-left"><span class="tag-category">Infrastructure</span><span class="tag-name">#Networking</span><span class="tag-count">75 posts</span></div>
+          <div class="tag-left"><span class="tag-category">Infrastructure</span><span class="tag-name">#Networking</span></div>
           <i class="fa-solid fa-chevron-right" style="font-size:11px;color:var(--gray-400);"></i>
         </div>
         <div class="tag-item" onclick="filterByTagName('Campus')">
-          <div class="tag-left"><span class="tag-category">Life</span><span class="tag-name">#BearcatLife</span><span class="tag-count">210 posts</span></div>
+          <div class="tag-left"><span class="tag-category">Life</span><span class="tag-name">#BearcatLife</span></div>
           <i class="fa-solid fa-chevron-right" style="font-size:11px;color:var(--gray-400);"></i>
         </div>
         <div class="tag-item" onclick="filterByTagName('Events')">
-          <div class="tag-left"><span class="tag-category">Campus</span><span class="tag-name">#Events</span><span class="tag-count">56 posts</span></div>
+          <div class="tag-left"><span class="tag-category">Campus</span><span class="tag-name">#Events</span></div>
           <i class="fa-solid fa-chevron-right" style="font-size:11px;color:var(--gray-400);"></i>
         </div>
       </div>
     </div>
   </div>
-
   <div class="widget-card">
     <div class="widget-header"><span class="widget-title">Connect with the Team</span></div>
     <div class="widget-body">
@@ -383,15 +586,57 @@
 <div class="toast" id="toast"><i class="fa-solid fa-circle-check"></i><span id="toastMsg">Done!</span></div>
 
 <script>
-// ─── KEYS ───
-const PROFILE_KEY  = 'ucconnect_profile';
+// ═══════════════════════════════════════════════
+// CONSTANTS & STATE
+// ═══════════════════════════════════════════════
+const USERS_KEY    = 'ucconnect_users';
+const SESSION_KEY  = 'ucconnect_session';
 const POSTS_KEY    = 'ucconnect_posts';
-const AVATARCOLORS = ['#E00122','#0d0d0d','#2563eb','#059669','#7c3aed','#d97706'];
+const FOLLOWS_KEY  = 'ucconnect_follows';
+const NOTIFS_KEY   = 'ucconnect_notifs';
+const EVENTS_KEY   = 'ucconnect_events';
+const PROFILE_KEY  = 'ucconnect_profile'; // legacy, kept for messages.html
 
-let profile = null;
+const AVATAR_COLORS = ['#E00122','#0d0d0d','#2563eb','#059669','#7c3aed','#d97706','#0891b2','#be185d'];
+
+let currentUser  = null;
 let activeFilter = null;
+let homeTab      = 'all';
 
-// ─── TOAST ───
+// ═══════════════════════════════════════════════
+// STORAGE HELPERS
+// ═══════════════════════════════════════════════
+const getUsers   = () => JSON.parse(localStorage.getItem(USERS_KEY)   || '[]');
+const saveUsers  = u  => localStorage.setItem(USERS_KEY, JSON.stringify(u));
+const getSession = () => JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+const setSession = s  => localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+const clearSession = ()=> localStorage.removeItem(SESSION_KEY);
+const getPosts   = () => JSON.parse(localStorage.getItem(POSTS_KEY)   || '[]');
+const savePosts  = p  => localStorage.setItem(POSTS_KEY, JSON.stringify(p));
+const getFollows = () => JSON.parse(localStorage.getItem(FOLLOWS_KEY) || '[]');
+const saveFollows= f  => localStorage.setItem(FOLLOWS_KEY, JSON.stringify(f));
+const getNotifs  = () => JSON.parse(localStorage.getItem(NOTIFS_KEY)  || '[]');
+const saveNotifs = n  => localStorage.setItem(NOTIFS_KEY, JSON.stringify(n));
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+function hashPassword(p) {
+  return btoa(unescape(encodeURIComponent(p + '_uc2024_salt')));
+}
+
+function timeAgo(ts) {
+  const d = Date.now() - ts;
+  if (d < 60000)    return 'Just now';
+  if (d < 3600000)  return Math.floor(d/60000)   + 'm ago';
+  if (d < 86400000) return Math.floor(d/3600000) + 'h ago';
+  return Math.floor(d/86400000) + 'd ago';
+}
+
+function escapeHtml(t) {
+  return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 function showToast(msg, type = 'success') {
   const t = document.getElementById('toast');
   document.getElementById('toastMsg').textContent = msg;
@@ -400,51 +645,222 @@ function showToast(msg, type = 'success') {
   setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-// ─── PROFILE ───
-function loadProfile() {
-  profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null');
-  if (!profile) {
-    document.getElementById('profileModal').classList.remove('hidden');
-  } else {
-    applyProfile(profile);
+// ═══════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((b,i) => b.classList.toggle('active', (i===0 && tab==='login') || (i===1 && tab==='signup')));
+  document.getElementById('loginPanel').classList.toggle('active', tab==='login');
+  document.getElementById('signupPanel').classList.toggle('active', tab==='signup');
+  document.getElementById('loginError').classList.remove('visible');
+  document.getElementById('signupError').classList.remove('visible');
+}
+
+function showAuthError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+function doLogin() {
+  const email    = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const password = document.getElementById('loginPassword').value;
+  if (!email || !password) { showAuthError('loginError','Please fill in all fields.'); return; }
+
+  const users = getUsers();
+  const user  = users.find(u => u.email === email);
+  if (!user || user.passwordHash !== hashPassword(password)) {
+    showAuthError('loginError','Invalid email or password.'); return;
   }
+
+  setSession({ userId: user.id });
+  currentUser = user;
+  onAuthSuccess();
 }
 
-function applyProfile(p) {
-  const initial = p.name.charAt(0).toUpperCase();
-  document.getElementById('navAvatar').textContent      = initial;
-  document.getElementById('navName').textContent        = p.name;
-  document.getElementById('navRole').textContent        = p.major || 'UC Student';
-  document.getElementById('composerAvatar').textContent = initial;
-  document.getElementById('composerAvatar').style.background = AVATARCOLORS[0];
+function doSignup() {
+  const name     = document.getElementById('signupName').value.trim();
+  const username = document.getElementById('signupUsername').value.trim().toLowerCase().replace(/\s+/g,'');
+  const email    = document.getElementById('signupEmail').value.trim().toLowerCase();
+  const password = document.getElementById('signupPassword').value;
+  const major    = document.getElementById('signupMajor').value;
+  const year     = document.getElementById('signupYear').value;
+
+  if (!name || !username || !email || !password) { showAuthError('signupError','Please fill in all required fields.'); return; }
+  if (password.length < 6) { showAuthError('signupError','Password must be at least 6 characters.'); return; }
+
+  const users = getUsers();
+  if (users.find(u => u.email === email))    { showAuthError('signupError','That email is already registered.'); return; }
+  if (users.find(u => u.username === username)) { showAuthError('signupError','That username is taken.'); return; }
+
+  const user = {
+    id: 'user_' + Date.now(),
+    name, username, email,
+    passwordHash: hashPassword(password),
+    major, year, bio: '',
+    avatarColor: AVATAR_COLORS[0],
+    createdAt: Date.now()
+  };
+  users.push(user);
+  saveUsers(users);
+  setSession({ userId: user.id });
+  currentUser = user;
+  onAuthSuccess();
 }
 
-function saveProfile() {
-  const name  = document.getElementById('profileName').value.trim();
-  const major = document.getElementById('profileMajor').value;
-  const year  = document.getElementById('profileYear').value;
-  if (!name) { showToast('Please enter your name!', 'warn'); return; }
-  profile = { name, major, year, avatarColor: AVATARCOLORS[0] };
-  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+function doLogout() {
+  clearSession();
+  currentUser = null;
+  closeProfileModal();
+  document.getElementById('authModal').classList.remove('hidden');
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPassword').value = '';
+}
+
+function onAuthSuccess() {
+  document.getElementById('authModal').classList.add('hidden');
+  syncLegacyProfile();
+  applyCurrentUser();
+  updateNotifBadge();
+  renderCurrentView();
+}
+
+function syncLegacyProfile() {
+  if (!currentUser) return;
+  localStorage.setItem(PROFILE_KEY, JSON.stringify({
+    name: currentUser.name,
+    major: currentUser.major,
+    year: currentUser.year,
+    avatarColor: currentUser.avatarColor
+  }));
+}
+
+function applyCurrentUser() {
+  if (!currentUser) return;
+  const initial = currentUser.name.charAt(0).toUpperCase();
+  document.getElementById('navAvatar').textContent        = initial;
+  document.getElementById('navAvatar').style.background  = currentUser.avatarColor;
+  document.getElementById('navName').textContent          = currentUser.name;
+  document.getElementById('navRole').textContent          = currentUser.major || 'UC Student';
+  document.getElementById('composerAvatar').textContent   = initial;
+  document.getElementById('composerAvatar').style.background = currentUser.avatarColor;
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+let currentView = 'home';
+
+function showView(viewName, linkEl) {
+  // hide all views
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+
+  document.getElementById('view-' + viewName).classList.add('active');
+  if (linkEl) linkEl.classList.add('active');
+  currentView = viewName;
+
+  // Mark notifications read when opening that view
+  if (viewName === 'notifications') {
+    markNotifsRead();
+  }
+
+  renderCurrentView();
+}
+
+function renderCurrentView() {
+  if (currentView === 'home')          renderHomePosts();
+  else if (currentView === 'following')    renderFollowing();
+  else if (currentView === 'bookmarks')    renderBookmarks();
+  else if (currentView === 'departments')  renderDepartments();
+  else if (currentView === 'events')       renderEvents();
+  else if (currentView === 'notifications')renderNotifications();
+}
+
+// ═══════════════════════════════════════════════
+// PROFILE SETTINGS
+// ═══════════════════════════════════════════════
+let selectedAvatarColor = null;
+
+function openProfileModal(e) {
+  e.preventDefault();
+  if (!currentUser) return;
+  selectedAvatarColor = currentUser.avatarColor;
+
+  document.getElementById('editName').value     = currentUser.name;
+  document.getElementById('editUsername').value = currentUser.username;
+  document.getElementById('editBio').value      = currentUser.bio || '';
+  document.getElementById('editMajor').value    = currentUser.major || '';
+  document.getElementById('editYear').value     = currentUser.year || '';
+
+  // Build color swatches
+  const picker = document.getElementById('colorPicker');
+  picker.innerHTML = '';
+  AVATAR_COLORS.forEach(c => {
+    const sw = document.createElement('div');
+    sw.className = 'color-swatch' + (c === selectedAvatarColor ? ' selected' : '');
+    sw.style.background = c;
+    sw.title = c;
+    sw.onclick = () => {
+      selectedAvatarColor = c;
+      picker.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+      sw.classList.add('selected');
+    };
+    picker.appendChild(sw);
+  });
+
+  document.getElementById('profileModal').classList.remove('hidden');
+}
+
+function closeProfileModal() {
   document.getElementById('profileModal').classList.add('hidden');
-  applyProfile(profile);
-  showToast('Welcome to UCConnect, ' + name + '! 🐾');
 }
 
-// ─── POSTS ───
-function getPosts() { return JSON.parse(localStorage.getItem(POSTS_KEY) || '[]'); }
-function savePosts(posts) { localStorage.setItem(POSTS_KEY, JSON.stringify(posts)); }
+function saveProfileSettings() {
+  const name     = document.getElementById('editName').value.trim();
+  const username = document.getElementById('editUsername').value.trim().toLowerCase();
+  const bio      = document.getElementById('editBio').value.trim();
+  const major    = document.getElementById('editMajor').value;
+  const year     = document.getElementById('editYear').value;
 
-function timeAgo(ts) {
-  const diff = Date.now() - ts;
-  if (diff < 60000) return 'Just now';
-  if (diff < 3600000) return Math.floor(diff/60000) + 'm ago';
-  if (diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
-  return Math.floor(diff/86400000) + 'd ago';
+  if (!name) { showToast('Name cannot be empty.', 'warn'); return; }
+
+  const users = getUsers();
+  const idx   = users.findIndex(u => u.id === currentUser.id);
+  if (idx === -1) return;
+
+  // Check username uniqueness
+  const conflict = users.find(u => u.username === username && u.id !== currentUser.id);
+  if (conflict) { showToast('Username already taken.', 'warn'); return; }
+
+  users[idx] = { ...users[idx], name, username, bio, major, year, avatarColor: selectedAvatarColor };
+  saveUsers(users);
+  currentUser = users[idx];
+  syncLegacyProfile();
+  applyCurrentUser();
+  closeProfileModal();
+  showToast('Profile updated!');
+  renderCurrentView();
 }
 
-function escapeHtml(t) {
-  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// ═══════════════════════════════════════════════
+// POST CARD
+// ═══════════════════════════════════════════════
+function isLikedByMe(post) {
+  if (!currentUser) return false;
+  if (Array.isArray(post.likedBy)) return post.likedBy.includes(currentUser.id);
+  return !!post.liked; // legacy
+}
+
+function isBookmarkedByMe(post) {
+  if (!currentUser) return false;
+  if (Array.isArray(post.bookmarkedBy)) return post.bookmarkedBy.includes(currentUser.id);
+  return !!post.bookmarked; // legacy
+}
+
+function isFollowing(authorName) {
+  if (!currentUser) return false;
+  return getFollows().some(f => f.followerId === currentUser.id && f.followingName === authorName);
 }
 
 function buildPostCard(post) {
@@ -452,136 +868,208 @@ function buildPostCard(post) {
   card.className = 'post-card';
   card.dataset.id = post.id;
 
-  const commentsHtml = post.comments.map(c => `
+  const liked      = isLikedByMe(post);
+  const bookmarked = isBookmarkedByMe(post);
+  const isMyPost   = currentUser && (post.authorId === currentUser.id || post.author === currentUser.name);
+  const following  = isFollowing(post.author);
+
+  const commentsHtml = (post.comments || []).map(c => `
     <div class="comment-item">
-      <div class="comment-avatar" style="background:${c.avatarColor||'#0d0d0d'}">${c.author.charAt(0).toUpperCase()}</div>
+      <div class="comment-avatar" style="background:${c.avatarColor || '#0d0d0d'}">${escapeHtml(c.author.charAt(0).toUpperCase())}</div>
       <div class="comment-bubble">
         <div class="comment-author">${escapeHtml(c.author)}</div>
         <div class="comment-text">${escapeHtml(c.content)}</div>
         <div class="comment-time">${timeAgo(c.ts)}</div>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 
-  const likedClass     = post.liked ? 'liked' : '';
-  const likeIcon       = post.liked ? 'fa-solid' : 'fa-regular';
-  const bookmarkClass  = post.bookmarked ? 'bookmarked' : '';
-  const bookmarkIcon   = post.bookmarked ? 'fa-solid' : 'fa-regular';
+  const followBtn = !isMyPost ? `
+    <button class="follow-btn${following ? ' following' : ''}" id="fb-${post.id}"
+      onclick="toggleFollow('${escapeHtml(post.author)}','${post.id}',this)">
+      ${following ? 'Following' : '+ Follow'}
+    </button>` : '';
 
   card.innerHTML = `
     <div class="post-header">
-      <div class="post-avatar" style="background:${post.avatarColor}">${post.author.charAt(0).toUpperCase()}</div>
+      <div class="post-avatar" style="background:${post.avatarColor || '#E00122'}">${escapeHtml(post.author.charAt(0).toUpperCase())}</div>
       <div class="post-meta">
         <div class="post-author">${escapeHtml(post.author)}</div>
         <div class="post-time">${timeAgo(post.ts)}</div>
       </div>
       <span class="post-dept">${escapeHtml(post.dept || 'Student')}</span>
+      ${followBtn}
     </div>
     ${post.content ? `<div class="post-body">${escapeHtml(post.content).replace(/\n/g,'<br>')}</div>` : ''}
-    ${post.photo   ? `<img class="post-image" src="${post.photo}" alt="Post image" />` : ''}
+    ${post.photo   ? `<img class="post-image" src="${post.photo}" alt="Post image" loading="lazy" />` : ''}
     <div class="post-footer">
-      <button class="action-btn ${likedClass}" onclick="toggleLike('${post.id}',this)">
-        <i class="${likeIcon} fa-heart"></i><span>${post.likes}</span>
+      <button class="action-btn${liked ? ' liked' : ''}" onclick="toggleLike('${post.id}',this)">
+        <i class="${liked ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+        <span>${Array.isArray(post.likedBy) ? post.likedBy.length : (post.likes || 0)}</span>
       </button>
       <button class="action-btn" onclick="toggleComments('${post.id}',this)">
-        <i class="fa-regular fa-comment"></i><span>${post.comments.length}</span>
+        <i class="fa-regular fa-comment"></i><span>${(post.comments||[]).length}</span>
       </button>
       <div class="action-spacer"></div>
-      <button class="action-btn ${bookmarkClass}" onclick="toggleBookmark('${post.id}',this)">
-        <i class="${bookmarkIcon} fa-bookmark"></i>
+      <button class="action-btn${bookmarked ? ' bookmarked' : ''}" onclick="toggleBookmark('${post.id}',this)">
+        <i class="${bookmarked ? 'fa-solid' : 'fa-regular'} fa-bookmark"></i>
       </button>
     </div>
     <div class="comments-section" id="comments-${post.id}">
       <div class="comments-list" id="clist-${post.id}">
-        ${post.comments.length ? commentsHtml : '<div class="no-comments">No comments yet. Be the first!</div>'}
+        ${(post.comments||[]).length ? commentsHtml : '<div class="no-comments">No comments yet. Be the first!</div>'}
       </div>
       <div class="comment-input-row">
-        <div class="comment-avatar" style="background:${profile ? AVATARCOLORS[0] : '#999'}">${profile ? profile.name.charAt(0).toUpperCase() : '?'}</div>
-        <input class="comment-input" id="cinput-${post.id}" placeholder="Write a comment..." onkeydown="if(event.key==='Enter')submitComment('${post.id}')" />
+        <div class="comment-avatar" style="background:${currentUser?.avatarColor || '#999'}">${currentUser ? currentUser.name.charAt(0).toUpperCase() : '?'}</div>
+        <input class="comment-input" id="cinput-${post.id}" placeholder="Write a comment..."
+          onkeydown="if(event.key==='Enter')submitComment('${post.id}')" />
         <button class="comment-submit" onclick="submitComment('${post.id}')"><i class="fa-solid fa-paper-plane"></i></button>
       </div>
-    </div>
-  `;
+    </div>`;
   return card;
 }
 
-function renderPosts(filter = null) {
-  const container = document.getElementById('postsContainer');
-  container.innerHTML = '';
-  let posts = getPosts().reverse();
-
-  // Search filter
-  const search = document.getElementById('searchInput').value.trim().toLowerCase();
-  if (search) posts = posts.filter(p => p.content.toLowerCase().includes(search) || p.author.toLowerCase().includes(search));
-
-  // Tag filter
-  if (filter) posts = posts.filter(p => p.content.toLowerCase().includes(filter.toLowerCase()) || (p.tags||[]).includes(filter));
-
+function renderPostsInto(containerId, posts, emptyMsg) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
   if (!posts.length) {
-    container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-inbox"></i><p>${filter ? 'No posts found for this topic.' : 'No posts yet. Be the first to post!'}</p></div>`;
+    el.innerHTML = `<div class="view-empty"><i class="fa-solid fa-inbox"></i><h3>Nothing here</h3><p>${emptyMsg}</p></div>`;
     return;
   }
-  posts.forEach(p => container.appendChild(buildPostCard(p)));
+  posts.forEach(p => el.appendChild(buildPostCard(p)));
 }
 
-// ─── ACTIONS ───
+// ═══════════════════════════════════════════════
+// HOME VIEW
+// ═══════════════════════════════════════════════
+function renderHomePosts() {
+  let posts = getPosts().reverse();
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (search) posts = posts.filter(p => (p.content || '').toLowerCase().includes(search) || p.author.toLowerCase().includes(search));
+  if (activeFilter) posts = posts.filter(p => (p.content || '').toLowerCase().includes(activeFilter.toLowerCase()) || (p.tags||[]).includes(activeFilter));
+  if (homeTab === 'dept' && currentUser?.major) posts = posts.filter(p => p.dept === currentUser.major);
+  renderPostsInto('postsContainer', posts, activeFilter ? 'No posts found for this topic.' : 'No posts yet. Be the first to post!');
+}
+
+function setHomeTab(tab, btn) {
+  homeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderHomePosts();
+}
+
+function filterByTag(el, tag) {
+  if (activeFilter === tag) { clearFilter(); return; }
+  activeFilter = tag;
+  document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('filterClear').classList.add('visible');
+  renderHomePosts();
+}
+
+function filterByTagName(tag) {
+  showView('home', document.getElementById('nav-home'));
+  activeFilter = tag;
+  document.querySelectorAll('.filter-tag').forEach(t => t.classList.toggle('active', t.textContent.replace('#','') === tag));
+  document.getElementById('filterClear').classList.add('visible');
+  renderHomePosts();
+}
+
+function clearFilter() {
+  activeFilter = null;
+  document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+  document.getElementById('filterClear').classList.remove('visible');
+  renderHomePosts();
+}
+
+document.getElementById('searchInput').addEventListener('input', () => { if (currentView==='home') renderHomePosts(); });
+
+// ═══════════════════════════════════════════════
+// POST ACTIONS
+// ═══════════════════════════════════════════════
 function toggleLike(id, btn) {
+  if (!currentUser) { showToast('Sign in to like posts.', 'warn'); return; }
   const posts = getPosts();
-  const post = posts.find(p => p.id === id);
+  const post  = posts.find(p => p.id === id);
   if (!post) return;
-  post.liked = !post.liked;
-  post.likes += post.liked ? 1 : -1;
+
+  if (!Array.isArray(post.likedBy)) post.likedBy = post.liked ? ['legacy'] : [];
+  const alreadyLiked = post.likedBy.includes(currentUser.id);
+
+  if (alreadyLiked) {
+    post.likedBy = post.likedBy.filter(uid => uid !== currentUser.id);
+  } else {
+    post.likedBy.push(currentUser.id);
+    // Notification for post author
+    if (post.author !== currentUser.name) {
+      addNotification('like', currentUser.name, currentUser.avatarColor, post.author, post.id, post.content || '');
+    }
+  }
+  post.likes = post.likedBy.length;
   savePosts(posts);
-  const span = btn.querySelector('span');
+
   const icon = btn.querySelector('i');
-  btn.classList.toggle('liked', post.liked);
-  icon.className = post.liked ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
-  span.textContent = post.likes;
+  const span = btn.querySelector('span');
+  const nowLiked = post.likedBy.includes(currentUser.id);
+  btn.classList.toggle('liked', nowLiked);
+  icon.className = nowLiked ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+  span.textContent = post.likedBy.length;
 }
 
 function toggleBookmark(id, btn) {
+  if (!currentUser) { showToast('Sign in to bookmark posts.', 'warn'); return; }
   const posts = getPosts();
-  const post = posts.find(p => p.id === id);
+  const post  = posts.find(p => p.id === id);
   if (!post) return;
-  post.bookmarked = !post.bookmarked;
+
+  if (!Array.isArray(post.bookmarkedBy)) post.bookmarkedBy = post.bookmarked ? ['legacy'] : [];
+  const alreadyBookmarked = post.bookmarkedBy.includes(currentUser.id);
+
+  if (alreadyBookmarked) {
+    post.bookmarkedBy = post.bookmarkedBy.filter(uid => uid !== currentUser.id);
+  } else {
+    post.bookmarkedBy.push(currentUser.id);
+  }
+  post.bookmarked = post.bookmarkedBy.includes(currentUser.id);
   savePosts(posts);
+
   const icon = btn.querySelector('i');
-  btn.classList.toggle('bookmarked', post.bookmarked);
-  icon.className = post.bookmarked ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark';
-  if (post.bookmarked) showToast('Post saved to bookmarks!');
+  const nowBookmarked = post.bookmarkedBy.includes(currentUser.id);
+  btn.classList.toggle('bookmarked', nowBookmarked);
+  icon.className = nowBookmarked ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark';
+  if (nowBookmarked) showToast('Saved to bookmarks!');
 }
 
-function toggleComments(id, btn) {
+function toggleComments(id) {
   const section = document.getElementById('comments-' + id);
   section.classList.toggle('open');
-  if (section.classList.contains('open')) {
-    document.getElementById('cinput-' + id)?.focus();
-  }
+  if (section.classList.contains('open')) document.getElementById('cinput-' + id)?.focus();
 }
 
 function submitComment(id) {
-  if (!profile) { showToast('Set up your profile first!', 'warn'); return; }
+  if (!currentUser) { showToast('Sign in to comment.', 'warn'); return; }
   const input = document.getElementById('cinput-' + id);
-  const text = input.value.trim();
+  const text  = input.value.trim();
   if (!text) return;
 
   const posts = getPosts();
-  const post = posts.find(p => p.id === id);
+  const post  = posts.find(p => p.id === id);
   if (!post) return;
 
-  const comment = { author: profile.name, content: text, ts: Date.now(), avatarColor: AVATARCOLORS[0] };
+  const comment = { author: currentUser.name, content: text, ts: Date.now(), avatarColor: currentUser.avatarColor };
+  if (!Array.isArray(post.comments)) post.comments = [];
   post.comments.push(comment);
   savePosts(posts);
   input.value = '';
 
-  // Update comment list in DOM
+  // Update DOM
   const clist = document.getElementById('clist-' + id);
   const noComment = clist.querySelector('.no-comments');
   if (noComment) noComment.remove();
   const el = document.createElement('div');
   el.className = 'comment-item';
   el.innerHTML = `
-    <div class="comment-avatar" style="background:${comment.avatarColor}">${comment.author.charAt(0).toUpperCase()}</div>
+    <div class="comment-avatar" style="background:${comment.avatarColor}">${escapeHtml(comment.author.charAt(0).toUpperCase())}</div>
     <div class="comment-bubble">
       <div class="comment-author">${escapeHtml(comment.author)}</div>
       <div class="comment-text">${escapeHtml(comment.content)}</div>
@@ -589,16 +1077,53 @@ function submitComment(id) {
     </div>`;
   clist.appendChild(el);
 
-  // Update count in footer
+  // Update count
   const card = document.querySelector(`.post-card[data-id="${id}"]`);
   if (card) {
-    const commentBtn = card.querySelector('.action-btn:nth-child(2) span');
-    if (commentBtn) commentBtn.textContent = post.comments.length;
+    const commentBtn = card.querySelectorAll('.action-btn')[1];
+    if (commentBtn) commentBtn.querySelector('span').textContent = post.comments.length;
+  }
+
+  // Notification
+  if (post.author !== currentUser.name) {
+    addNotification('comment', currentUser.name, currentUser.avatarColor, post.author, post.id, post.content || '');
   }
 }
 
-// ─── COMPOSE & POST ───
+function toggleFollow(authorName, postId, btn) {
+  if (!currentUser) { showToast('Sign in to follow.', 'warn'); return; }
+  let follows = getFollows();
+  const idx = follows.findIndex(f => f.followerId === currentUser.id && f.followingName === authorName);
+
+  if (idx !== -1) {
+    follows.splice(idx, 1);
+    btn.textContent = '+ Follow';
+    btn.classList.remove('following');
+    showToast('Unfollowed ' + authorName);
+  } else {
+    follows.push({ followerId: currentUser.id, followingName: authorName });
+    btn.textContent = 'Following';
+    btn.classList.add('following');
+    showToast('Now following ' + authorName + '!');
+  }
+  saveFollows(follows);
+  // Update all follow buttons for this author
+  document.querySelectorAll(`button[id^="fb-"]`).forEach(b => {
+    const pId = b.id.replace('fb-', '');
+    const p = getPosts().find(x => x.id === pId);
+    if (p && p.author === authorName && b.id !== 'fb-' + postId) {
+      const nowFollowing = follows.some(f => f.followerId === currentUser.id && f.followingName === authorName);
+      b.textContent = nowFollowing ? 'Following' : '+ Follow';
+      b.classList.toggle('following', nowFollowing);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════
+// COMPOSE NEW POST
+// ═══════════════════════════════════════════════
 let selectedPhoto = null;
+
 document.getElementById('photo-input').addEventListener('change', function() {
   const file = this.files[0];
   if (!file) return;
@@ -620,28 +1145,29 @@ document.getElementById('removePhoto').addEventListener('click', () => {
 });
 
 document.getElementById('postBtn').addEventListener('click', () => {
-  if (!profile) { showToast('Please set up your profile first!', 'warn'); return; }
+  if (!currentUser) { showToast('Sign in to post!', 'warn'); return; }
   const content = document.getElementById('postMessage').value.trim();
   if (!content && !selectedPhoto) { showToast('Write something before posting!', 'warn'); return; }
 
   const post = {
     id: 'post_' + Date.now(),
-    author: profile.name,
-    dept: profile.major || 'Student',
+    authorId: currentUser.id,
+    author: currentUser.name,
+    dept: currentUser.major || 'Student',
     content,
     photo: selectedPhoto,
-    avatarColor: AVATARCOLORS[Math.floor(Math.random() * AVATARCOLORS.length)],
+    avatarColor: currentUser.avatarColor,
     ts: Date.now(),
     likes: 0,
-    liked: false,
-    bookmarked: false,
-    comments: []
+    likedBy: [],
+    bookmarkedBy: [],
+    comments: [],
+    tags: []
   };
-
   const posts = getPosts();
   posts.push(post);
   savePosts(posts);
-  renderPosts(activeFilter);
+  renderHomePosts();
 
   document.getElementById('postMessage').value = '';
   document.getElementById('photoPreview').src = '';
@@ -655,68 +1181,219 @@ document.getElementById('postMessage').addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.ctrlKey) document.getElementById('postBtn').click();
 });
 
-// ─── SEARCH ───
-document.getElementById('searchInput').addEventListener('input', () => renderPosts(activeFilter));
-
-// ─── FILTER ───
-function filterByTag(el, tag) {
-  if (activeFilter === tag) { clearFilter(); return; }
-  activeFilter = tag;
-  document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('filterClear').classList.add('visible');
-  renderPosts(activeFilter);
+// ═══════════════════════════════════════════════
+// FOLLOWING VIEW
+// ═══════════════════════════════════════════════
+function renderFollowing() {
+  if (!currentUser) return;
+  const follows    = getFollows().filter(f => f.followerId === currentUser.id);
+  const following  = new Set(follows.map(f => f.followingName));
+  const posts      = getPosts().reverse().filter(p => following.has(p.author));
+  renderPostsInto('followingContainer', posts, "You're not following anyone yet. Follow people from the home feed!");
 }
 
-function filterByTagName(tag) {
-  activeFilter = tag;
-  document.querySelectorAll('.filter-tag').forEach(t => {
-    t.classList.toggle('active', t.textContent.replace('#','') === tag);
+// ═══════════════════════════════════════════════
+// BOOKMARKS VIEW
+// ═══════════════════════════════════════════════
+function renderBookmarks() {
+  if (!currentUser) return;
+  const posts = getPosts().reverse().filter(p => {
+    if (Array.isArray(p.bookmarkedBy)) return p.bookmarkedBy.includes(currentUser.id);
+    return !!p.bookmarked;
   });
-  document.getElementById('filterClear').classList.add('visible');
-  renderPosts(activeFilter);
+  renderPostsInto('bookmarksContainer', posts, "You haven't bookmarked any posts yet.");
 }
 
-function clearFilter() {
-  activeFilter = null;
-  document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
-  document.getElementById('filterClear').classList.remove('visible');
-  renderPosts(null);
-}
+// ═══════════════════════════════════════════════
+// DEPARTMENTS VIEW
+// ═══════════════════════════════════════════════
+const DEPARTMENTS = [
+  { name: 'Information Technology', icon: 'fa-laptop-code' },
+  { name: 'Computer Science',       icon: 'fa-microchip' },
+  { name: 'Cybersecurity',          icon: 'fa-shield-halved' },
+  { name: 'Computer Engineering',   icon: 'fa-server' },
+  { name: 'Electrical Engineering', icon: 'fa-bolt' },
+  { name: 'Mechanical Engineering', icon: 'fa-gears' },
+  { name: 'Business Administration',icon: 'fa-briefcase' },
+  { name: 'Nursing',                icon: 'fa-heart-pulse' },
+  { name: 'Architecture',           icon: 'fa-building' },
+  { name: 'Other',                  icon: 'fa-graduation-cap' },
+];
 
-// ─── TABS ───
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
+function renderDepartments() {
+  const posts  = getPosts();
+  const grid   = document.getElementById('deptGrid');
+  grid.innerHTML = '';
+  DEPARTMENTS.forEach(dept => {
+    const count = posts.filter(p => p.dept === dept.name).length;
+    const card  = document.createElement('div');
+    card.className = 'dept-card';
+    card.innerHTML = `
+      <div class="dept-card-icon"><i class="fa-solid ${dept.icon}"></i></div>
+      <div class="dept-card-name">${escapeHtml(dept.name)}</div>
+      <div class="dept-card-count">${count} post${count!==1?'s':''}</div>`;
+    card.onclick = () => {
+      showView('home', document.getElementById('nav-home'));
+      activeFilter = null;
+      homeTab = 'all';
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector('.tab-btn').classList.add('active');
+      const posts2 = getPosts().reverse().filter(p => p.dept === dept.name);
+      renderPostsInto('postsContainer', posts2, 'No posts from this department yet.');
+    };
+    grid.appendChild(card);
   });
-});
+}
 
-// ─── SEED DEFAULT POST ───
+// ═══════════════════════════════════════════════
+// EVENTS VIEW
+// ═══════════════════════════════════════════════
+const SEEDED_EVENTS = [
+  { id:'evt1', month:'APR', day:'10', tag:'Career', title:'Spring Career & Internship Fair', time:'10:00 AM – 4:00 PM', location:'Fifth Third Arena', desc:'Connect with 200+ employers from tech, engineering, healthcare, and more. Bring your resume and dress to impress!' },
+  { id:'evt2', month:'APR', day:'18', tag:'Academic', title:'UC Spring Hackathon 2026', time:'9:00 AM – 9:00 PM', location:'Digital Futures Building', desc:'24-hour hackathon open to all UC students. Build something amazing, win prizes, and eat free food. 🐾' },
+  { id:'evt3', month:'APR', day:'22', tag:'Social', title:'Earth Day Spring Fest on MainStreet', time:'12:00 PM – 5:00 PM', location:'MainStreet UC', desc:'Live music, food trucks, sustainability vendors, and activities celebrating Earth Day on our beautiful campus.' },
+  { id:'evt4', month:'MAY', day:'02', tag:'Academic', title:'Co-op Prep Workshop', time:'2:00 PM – 4:00 PM', location:'Lindner Hall, Room 110', desc:'Resume reviews, interview tips, and networking strategies tailored for UC's world-renowned co-op program.' },
+  { id:'evt5', month:'MAY', day:'09', tag:'Sports', title:'Bearcat Baseball vs. Memphis', time:'6:00 PM', location:'Marge Schott Stadium', desc:'Cheer on your Bearcats! Student tickets available at the UC Box Office. Wear red and bring the energy.' },
+  { id:'evt6', month:'MAY', day:'15', tag:'Academic', title:'Finals Study Jam at Langsam', time:'7:00 PM – 12:00 AM', location:'Langsam Library', desc:'Late-night study session with free coffee, snacks, therapy dogs, and tutoring stations. You've got this! 📚' },
+];
+
+const TAG_COLORS = { Career:'#2563eb', Academic:'#7c3aed', Social:'#059669', Sports:'#d97706' };
+
+function renderEvents() {
+  const list = document.getElementById('eventsList');
+  list.innerHTML = '';
+  SEEDED_EVENTS.forEach(ev => {
+    const card = document.createElement('div');
+    card.className = 'event-card';
+    const tagColor = TAG_COLORS[ev.tag] || '#E00122';
+    card.innerHTML = `
+      <div class="event-date-box"><div class="event-date-month">${ev.month}</div><div class="event-date-day">${ev.day}</div></div>
+      <div class="event-info">
+        <span class="event-tag" style="background:${tagColor}1a;color:${tagColor}">${ev.tag}</span>
+        <div class="event-title">${escapeHtml(ev.title)}</div>
+        <div class="event-meta">
+          <span><i class="fa-regular fa-clock"></i>${ev.time}</span>
+          <span><i class="fa-solid fa-location-dot"></i>${escapeHtml(ev.location)}</span>
+        </div>
+        <div class="event-desc">${escapeHtml(ev.desc)}</div>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════
+function addNotification(type, fromName, fromAvatarColor, toAuthorName, postId, postContent) {
+  // Find toUserId by author name
+  const users  = getUsers();
+  const toUser = users.find(u => u.name === toAuthorName);
+  if (!toUser) return;
+
+  const notifs = getNotifs();
+  notifs.push({
+    id: 'notif_' + Date.now(),
+    type,
+    fromName,
+    fromAvatarColor,
+    toUserId: toUser.id,
+    postId,
+    postSnippet: (postContent || '').substring(0, 60),
+    ts: Date.now(),
+    read: false
+  });
+  saveNotifs(notifs);
+  updateNotifBadge();
+}
+
+function updateNotifBadge() {
+  if (!currentUser) return;
+  const count = getNotifs().filter(n => n.toUserId === currentUser.id && !n.read).length;
+  const badge = document.getElementById('notifBadge');
+  badge.style.display = count > 0 ? 'inline' : 'none';
+  badge.textContent = count > 9 ? '9+' : count;
+}
+
+function markNotifsRead() {
+  if (!currentUser) return;
+  const notifs = getNotifs().map(n => n.toUserId === currentUser.id ? { ...n, read: true } : n);
+  saveNotifs(notifs);
+  updateNotifBadge();
+}
+
+function renderNotifications() {
+  if (!currentUser) return;
+  const list   = document.getElementById('notifsList');
+  const notifs = getNotifs().filter(n => n.toUserId === currentUser.id).reverse();
+  list.innerHTML = '';
+  if (!notifs.length) {
+    list.innerHTML = `<div class="view-empty"><i class="fa-solid fa-bell"></i><h3>All quiet</h3><p>You'll see notifications when people like or comment on your posts.</p></div>`;
+    return;
+  }
+  notifs.forEach(n => {
+    const item = document.createElement('div');
+    item.className = 'notif-item' + (n.read ? '' : ' unread');
+    const isLike = n.type === 'like';
+    const iconBg = isLike ? '#e0315a' : '#2563eb';
+    const iconCls= isLike ? 'fa-heart' : 'fa-comment';
+    const verb   = isLike ? 'liked your post' : 'commented on your post';
+    item.innerHTML = `
+      <div class="notif-icon" style="background:${iconBg}"><i class="fa-solid ${iconCls}"></i></div>
+      <div class="notif-body">
+        <div class="notif-text"><strong>${escapeHtml(n.fromName)}</strong> ${verb}</div>
+        ${n.postSnippet ? `<div class="notif-snippet">"${escapeHtml(n.postSnippet)}${n.postSnippet.length>=60?'…':''}"</div>` : ''}
+        <div class="notif-time">${timeAgo(n.ts)}</div>
+      </div>`;
+    list.appendChild(item);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// SEED DATA
+// ═══════════════════════════════════════════════
 function seedDefaultPost() {
   const posts = getPosts();
   if (!posts.length) {
     posts.push({
       id: 'post_welcome',
+      authorId: 'system',
       author: 'UCConnect Team',
       dept: 'Official',
-      content: 'Welcome to UCConnect — the student communication platform for the University of Cincinnati. Share updates, connect with classmates, and stay plugged into campus life. 🐾',
+      content: 'Welcome to UCConnect — the student communication platform for the University of Cincinnati. Share updates, connect with classmates, and stay plugged into campus life. Go Bearcats! 🐾',
       photo: null,
       avatarColor: '#0d0d0d',
       ts: Date.now(),
       likes: 24,
-      liked: false,
-      bookmarked: false,
+      likedBy: [],
+      bookmarkedBy: [],
       comments: []
     });
     savePosts(posts);
   }
 }
 
-// ─── INIT ───
-seedDefaultPost();
-loadProfile();
-renderPosts();
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+function init() {
+  seedDefaultPost();
+
+  const session = getSession();
+  if (session) {
+    const users = getUsers();
+    currentUser = users.find(u => u.id === session.userId) || null;
+  }
+
+  if (!currentUser) {
+    document.getElementById('authModal').classList.remove('hidden');
+  } else {
+    applyCurrentUser();
+    updateNotifBadge();
+    renderHomePosts();
+  }
+}
+
+init();
 </script>
 </body>
 </html>
