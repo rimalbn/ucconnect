@@ -8,17 +8,13 @@ module.exports = async function handler(req, res) {
   };
 
   try {
-    const { neon } = require('@neondatabase/serverless');
-    const { PrismaNeon } = require('@prisma/adapter-neon');
     const { PrismaClient } = require('@prisma/client');
     info.prismaClientImport = 'OK';
     try {
-      const sql = neon(process.env.DATABASE_URL);
-      const adapter = new PrismaNeon(sql);
-      const p = new PrismaClient({ adapter });
-      info.prismaClientNew = 'OK';
+      const p = new PrismaClient();
       await p.$queryRaw`SELECT 1`;
       info.dbConnection = 'OK';
+      await p.$disconnect();
     } catch (e) {
       info.dbConnection = 'ERROR: ' + e.message;
     }
