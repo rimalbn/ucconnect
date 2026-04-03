@@ -34,6 +34,7 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  try {
   const tokenData = fromReq(req);
 
   if (req.method === 'GET') {
@@ -100,4 +101,8 @@ module.exports = async function handler(req, res) {
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
+  } catch (err) {
+    console.error('[posts.js]', err);
+    return res.status(500).json({ error: err.message || 'Internal server error' });
+  }
 };
