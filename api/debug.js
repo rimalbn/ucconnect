@@ -11,13 +11,13 @@ module.exports = async function handler(req, res) {
     const { PrismaClient } = require('@prisma/client');
     info.prismaClientImport = 'OK';
     try {
-      const p = new PrismaClient({ datasourceUrl: process.env.DATABASE_URL });
+      const p = new PrismaClient();
       info.prismaClientNew = 'OK';
       await p.$queryRaw`SELECT 1`;
       info.dbConnection = 'OK';
       await p.$disconnect();
     } catch (e) {
-      info.prismaClientNew = 'ERROR: ' + e.message;
+      info.dbConnection = 'ERROR: ' + e.message;
     }
   } catch (e) {
     info.prismaClientImport = 'ERROR: ' + e.message;
