@@ -246,6 +246,44 @@
     .toast i { color: #4ade80; }
     .toast.warn i { color: #fbbf24; }
 
+    /* ── MESSAGES / AI CHAT VIEW ── */
+    #view-messages { padding: 0; max-width: none; flex: 1; overflow: hidden; }
+    .ai-chat-wrap { display: flex; flex-direction: column; height: 100vh; background: var(--white); border-left: 1px solid var(--gray-200); }
+    .ai-chat-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--gray-200); flex-shrink: 0; background: var(--white); }
+    .ai-chat-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg,#4f46e5,#7c3aed); display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; flex-shrink: 0; }
+    .ai-chat-info { flex: 1; }
+    .ai-chat-name { font-family: var(--font-display); font-size: 15px; font-weight: 700; }
+    .ai-chat-status { font-size: 11px; color: #7c3aed; font-weight: 500; }
+    .ai-clear-btn { padding: 6px 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--gray-200); background: transparent; color: var(--gray-400); font-family: var(--font-body); font-size: 12px; cursor: pointer; transition: var(--t); display: flex; align-items: center; gap: 5px; }
+    .ai-clear-btn:hover { border-color: var(--red); color: var(--red); }
+    .ai-powered { font-size: 11px; background: #ede9fe; color: #7c3aed; padding: 4px 10px; border-radius: 20px; font-weight: 600; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+    .ai-messages-area { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; background: var(--gray-100); }
+    .ai-day-divider { text-align: center; font-size: 11px; color: var(--gray-400); font-weight: 500; padding: 4px 0; }
+    .ai-msg-row { display: flex; gap: 10px; align-items: flex-start; }
+    .ai-msg-row.self { flex-direction: row-reverse; }
+    .ai-msg-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,#4f46e5,#7c3aed); display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; flex-shrink: 0; margin-top: 2px; }
+    .ai-msg-avatar.self { background: var(--red); font-family: var(--font-display); font-weight: 700; font-size: 13px; }
+    .ai-msg-wrap { display: flex; flex-direction: column; max-width: 75%; }
+    .ai-msg-row.self .ai-msg-wrap { align-items: flex-end; }
+    .ai-msg-name { font-size: 11px; font-weight: 600; color: var(--gray-400); margin-bottom: 4px; }
+    .ai-bubble { padding: 11px 14px; border-radius: 4px 18px 18px 18px; background: var(--white); font-size: 14px; line-height: 1.6; color: var(--black); box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200); }
+    .ai-bubble.self { background: var(--red); color: white; border-radius: 18px 4px 18px 18px; border-color: transparent; }
+    .ai-bubble code { background: rgba(79,70,229,0.1); padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 12px; }
+    .ai-label { font-size: 10px; color: #7c3aed; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+    .ai-msg-time { font-size: 10px; color: var(--gray-400); margin-top: 4px; }
+    .ai-typing { display: flex; gap: 10px; align-items: center; }
+    .ai-typing-dots { display: flex; gap: 4px; background: var(--white); padding: 12px 16px; border-radius: 4px 18px 18px 18px; box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200); }
+    .ai-typing-dots span { width: 7px; height: 7px; border-radius: 50%; background: #7c3aed; opacity: 0.5; animation: aiTyping 1.2s infinite; }
+    .ai-typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .ai-typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes aiTyping { 0%,80%,100% { transform: translateY(0); opacity: 0.5; } 40% { transform: translateY(-5px); opacity: 1; } }
+    .ai-input-bar { padding: 14px 20px; border-top: 1px solid var(--gray-200); background: var(--white); flex-shrink: 0; display: flex; gap: 10px; align-items: flex-end; }
+    .ai-input { flex: 1; border: 1.5px solid var(--gray-200); border-radius: 22px; padding: 10px 16px; font-family: var(--font-body); font-size: 14px; outline: none; resize: none; max-height: 110px; line-height: 1.5; transition: var(--t); background: var(--gray-100); }
+    .ai-input:focus { border-color: #7c3aed; background: var(--white); box-shadow: 0 0 0 3px rgba(124,58,237,0.07); }
+    .ai-send-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: linear-gradient(135deg,#4f46e5,#7c3aed); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: var(--t); flex-shrink: 0; }
+    .ai-send-btn:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(124,58,237,0.35); }
+    .ai-send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
     /* ── RESPONSIVE ── */
     @media (max-width: 1100px) { .right-panel { width: 250px; } }
     @media (max-width: 900px) {
@@ -417,7 +455,7 @@
   <div class="nav-label">Main</div>
   <a class="nav-link active" id="nav-home" onclick="showView('home',this)"><i class="fa-solid fa-house"></i><span>Home</span></a>
   <a class="nav-link" id="nav-following" onclick="showView('following',this)"><i class="fa-solid fa-users"></i><span>Following</span></a>
-  <a href="messages.html" class="nav-link"><i class="fa-solid fa-envelope"></i><span>Messages</span><span class="nav-badge" id="msgBadge" style="display:none">!</span></a>
+  <a class="nav-link" id="nav-messages" onclick="showView('messages',this)"><i class="fa-solid fa-envelope"></i><span>Messages</span></a>
   <a class="nav-link" id="nav-bookmarks" onclick="showView('bookmarks',this)"><i class="fa-solid fa-bookmark"></i><span>Bookmarks</span></a>
   <div class="nav-label" style="margin-top:8px">Explore</div>
   <a class="nav-link" id="nav-departments" onclick="showView('departments',this)"><i class="fa-solid fa-graduation-cap"></i><span>Departments</span></a>
@@ -525,6 +563,50 @@
       <p>Recent activity on your posts.</p>
     </div>
     <div class="notifs-list" id="notifsList"></div>
+  </div>
+
+  <!-- MESSAGES / AI CHAT VIEW -->
+  <div class="view" id="view-messages">
+    <div class="ai-chat-wrap">
+      <div class="ai-chat-header">
+        <div class="ai-chat-avatar"><i class="fa-solid fa-robot"></i></div>
+        <div class="ai-chat-info">
+          <div class="ai-chat-name">UCConnect AI</div>
+          <div class="ai-chat-status">● Always online</div>
+        </div>
+        <span class="ai-powered"><i class="fa-solid fa-sparkles"></i> Powered by Claude</span>
+        <button class="ai-clear-btn" onclick="clearAIChat()" title="Clear conversation">
+          <i class="fa-solid fa-rotate-left"></i> Clear
+        </button>
+      </div>
+      <div class="ai-messages-area" id="aiMessages">
+        <div class="ai-day-divider">Today</div>
+        <div class="ai-msg-row">
+          <div class="ai-msg-avatar"><i class="fa-solid fa-robot"></i></div>
+          <div class="ai-msg-wrap">
+            <div class="ai-msg-name">UCConnect AI</div>
+            <div class="ai-bubble">
+              <div class="ai-label"><i class="fa-solid fa-sparkles"></i> UCConnect Assistant</div>
+              Hey there! 👋 I'm <strong>UCConnect AI</strong>, your campus assistant powered by Claude.<br><br>
+              I can help with:<br>
+              • 🎓 Academic questions &amp; course advice<br>
+              • 📍 Campus navigation &amp; resources<br>
+              • 💼 Co-op program guidance<br>
+              • 📅 Events &amp; campus life<br>
+              • 💬 General UC questions<br><br>
+              What's on your mind, Bearcat? 🐾
+            </div>
+            <div class="ai-msg-time">Just now</div>
+          </div>
+        </div>
+      </div>
+      <div class="ai-input-bar">
+        <textarea class="ai-input" id="aiInput" placeholder="Ask anything about UC..." rows="1"></textarea>
+        <button class="ai-send-btn" id="aiSendBtn" onclick="sendAIMessage()">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -772,12 +854,13 @@ function showView(viewName, linkEl) {
 }
 
 function renderCurrentView() {
-  if (currentView === 'home')          renderHomePosts();
-  else if (currentView === 'following')    renderFollowing();
-  else if (currentView === 'bookmarks')    renderBookmarks();
-  else if (currentView === 'departments')  renderDepartments();
-  else if (currentView === 'events')       renderEvents();
-  else if (currentView === 'notifications')renderNotifications();
+  if (currentView === 'home')               renderHomePosts();
+  else if (currentView === 'following')     renderFollowing();
+  else if (currentView === 'bookmarks')     renderBookmarks();
+  else if (currentView === 'departments')   renderDepartments();
+  else if (currentView === 'events')        renderEvents();
+  else if (currentView === 'notifications') renderNotifications();
+  else if (currentView === 'messages')      initAIChat();
 }
 
 // ═══════════════════════════════════════════════
@@ -1354,6 +1437,164 @@ function renderNotifications() {
       </div>`;
     list.appendChild(item);
   });
+}
+
+// ═══════════════════════════════════════════════
+// AI CHAT (MESSAGES VIEW)
+// ═══════════════════════════════════════════════
+const AI_HIST_KEY = 'ucconnect_ai_history';
+let aiHistory     = [];
+let aiChatReady   = false;
+
+function initAIChat() {
+  if (aiChatReady) { scrollAIMsgs(); return; }
+  aiChatReady = true;
+  const saved = localStorage.getItem(AI_HIST_KEY);
+  if (saved) {
+    try {
+      aiHistory = JSON.parse(saved);
+      if (aiHistory.length) replayAIHistory();
+    } catch(e) { aiHistory = []; }
+  }
+  // Wire up input
+  const input = document.getElementById('aiInput');
+  input.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 110) + 'px';
+  });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAIMessage(); }
+  });
+  scrollAIMsgs();
+}
+
+function replayAIHistory() {
+  const container = document.getElementById('aiMessages');
+  container.querySelectorAll('.ai-msg-row').forEach(el => el.remove());
+  aiHistory.forEach(m => appendAIBubble(m.role === 'user' ? 'self' : 'ai', m.content));
+}
+
+function appendAIBubble(role, content, scroll = false) {
+  const container = document.getElementById('aiMessages');
+  const row = document.createElement('div');
+  row.className = 'ai-msg-row' + (role === 'self' ? ' self' : '');
+  const now = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const initial = currentUser ? currentUser.name.charAt(0).toUpperCase() : '?';
+  const avatarColor = currentUser ? currentUser.avatarColor : '#E00122';
+
+  if (role === 'self') {
+    row.innerHTML = `
+      <div class="ai-msg-wrap">
+        <div class="ai-msg-name">${escapeHtml(currentUser?.name || 'You')}</div>
+        <div class="ai-bubble self">${escapeHtml(content).replace(/\n/g,'<br>')}</div>
+        <div class="ai-msg-time">${now}</div>
+      </div>
+      <div class="ai-msg-avatar self" style="background:${avatarColor}">${initial}</div>`;
+  } else {
+    row.innerHTML = `
+      <div class="ai-msg-avatar"><i class="fa-solid fa-robot"></i></div>
+      <div class="ai-msg-wrap">
+        <div class="ai-msg-name">UCConnect AI</div>
+        <div class="ai-bubble">
+          <div class="ai-label"><i class="fa-solid fa-sparkles"></i> UCConnect Assistant</div>
+          ${formatAIText(content)}
+        </div>
+        <div class="ai-msg-time">${now}</div>
+      </div>`;
+  }
+  container.appendChild(row);
+  if (scroll) scrollAIMsgs();
+}
+
+function formatAIText(text) {
+  return escapeHtml(text)
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/\n/g, '<br>');
+}
+
+function showAITyping() {
+  const container = document.getElementById('aiMessages');
+  const el = document.createElement('div');
+  el.className = 'ai-typing';
+  el.id = 'aiTyping';
+  el.innerHTML = `
+    <div class="ai-msg-avatar"><i class="fa-solid fa-robot"></i></div>
+    <div class="ai-typing-dots"><span></span><span></span><span></span></div>`;
+  container.appendChild(el);
+  scrollAIMsgs();
+}
+
+function removeAITyping() { document.getElementById('aiTyping')?.remove(); }
+
+function scrollAIMsgs() {
+  const el = document.getElementById('aiMessages');
+  if (el) el.scrollTop = el.scrollHeight;
+}
+
+async function sendAIMessage() {
+  if (!currentUser) { requireAuth(); return; }
+  const input = document.getElementById('aiInput');
+  const text  = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+
+  aiHistory.push({ role: 'user', content: text });
+  appendAIBubble('self', text, true);
+
+  const btn = document.getElementById('aiSendBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  showAITyping();
+
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        system: `You are UCConnect Assistant, an AI helper for the University of Cincinnati student platform. Help UC students with campus navigation, academics, co-op guidance, clubs, events, and campus life. The user's name is ${currentUser.name}. Their major is ${currentUser.major || 'not specified'}. Their year is ${currentUser.year || 'not specified'}. Be warm, concise, and helpful. Occasionally say "Go Bearcats! 🐾". Use bold for key terms.`,
+        messages: aiHistory.slice(-20)
+      })
+    });
+    const data  = await response.json();
+    const reply = data.content?.[0]?.text || "Sorry, I couldn't get a response. Please try again!";
+    aiHistory.push({ role: 'assistant', content: reply });
+    localStorage.setItem(AI_HIST_KEY, JSON.stringify(aiHistory));
+    removeAITyping();
+    appendAIBubble('ai', reply, true);
+  } catch(err) {
+    removeAITyping();
+    appendAIBubble('ai', 'Oops! I ran into a connection issue. Please try again.', true);
+    console.error('AI error:', err);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
+}
+
+function clearAIChat() {
+  if (!confirm('Clear the AI conversation history?')) return;
+  aiHistory = [];
+  localStorage.removeItem(AI_HIST_KEY);
+  const container = document.getElementById('aiMessages');
+  container.innerHTML = `
+    <div class="ai-day-divider">Today</div>
+    <div class="ai-msg-row">
+      <div class="ai-msg-avatar"><i class="fa-solid fa-robot"></i></div>
+      <div class="ai-msg-wrap">
+        <div class="ai-msg-name">UCConnect AI</div>
+        <div class="ai-bubble">
+          <div class="ai-label"><i class="fa-solid fa-sparkles"></i> UCConnect Assistant</div>
+          Conversation cleared! I'm ready to help. What's on your mind, Bearcat? 🐾
+        </div>
+        <div class="ai-msg-time">Just now</div>
+      </div>
+    </div>`;
 }
 
 // ═══════════════════════════════════════════════
