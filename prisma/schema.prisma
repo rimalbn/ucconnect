@@ -3,40 +3,45 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id           String    @id @default(cuid())
-  username     String    @unique
-  email        String    @unique
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String   @unique
   passwordHash String
+  name         String
+  bio          String?
   major        String?
   year         String?
-  avatarColor  String    @default("#E00122")
-  createdAt    DateTime  @default(now())
+  avatarColor  String   @default("#E00122")
+  createdAt    DateTime @default(now())
 
-  posts        Post[]
-  likes        Like[]
-  bookmarks    Bookmark[]
-  comments     Comment[]
-  sentMessages     Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
+  posts         Post[]
+  likes         Like[]
+  bookmarks     Bookmark[]
+  comments      Comment[]
+  followers     Follow[]       @relation("Following")
+  following     Follow[]       @relation("Follower")
+  notifications Notification[] @relation("NotifRecipient")
 }
 
 model Post {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
   content   String?
   photoUrl  String?
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   author    User      @relation(fields: [authorId], references: [id])
   authorId  String
 
-  likes     Like[]
-  bookmarks Bookmark[]
-  comments  Comment[]
+  likes         Like[]
+  bookmarks     Bookmark[]
+  comments      Comment[]
+  notifications Notification[]
 }
 
 model Like {
@@ -62,21 +67,33 @@ model Comment {
   content   String
   createdAt DateTime @default(now())
 
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  String
-  post      Post     @relation(fields: [postId], references: [id])
-  postId    String
+  author   User   @relation(fields: [authorId], references: [id])
+  authorId String
+  post     Post   @relation(fields: [postId], references: [id])
+  postId   String
 }
 
-model Message {
-  id         String    @id @default(cuid())
-  content    String?
-  photoUrl   String?
-  createdAt  DateTime  @default(now())
-  readAt     DateTime?
+model Follow {
+  id          String   @id @default(cuid())
+  follower    User     @relation("Follower", fields: [followerId], references: [id])
+  followerId  String
+  following   User     @relation("Following", fields: [followingId], references: [id])
+  followingId String
+  createdAt   DateTime @default(now())
+  @@unique([followerId, followingId])
+}
 
-  sender     User      @relation("SentMessages", fields: [senderId], references: [id])
-  senderId   String
-  receiver   User      @relation("ReceivedMessages", fields: [receiverId], references: [id])
-  receiverId String
+model Notification {
+  id              String   @id @default(cuid())
+  type            String
+  fromName        String
+  fromAvatarColor String?
+  postSnippet     String?
+  read            Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  toUser   User    @relation("NotifRecipient", fields: [toUserId], references: [id])
+  toUserId String
+  post     Post?   @relation(fields: [postId], references: [id])
+  postId   String?
 }

@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/index.html" },
-    { "source": "/messages", "destination": "/messages.html" }
+    { "source": "/messages", "destination": "/messages.html" },
+    { "source": "/", "destination": "/index.html" }
   ]
 }

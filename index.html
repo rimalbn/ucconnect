@@ -671,44 +671,35 @@
 // ═══════════════════════════════════════════════
 // CONSTANTS & STATE
 // ═══════════════════════════════════════════════
-const USERS_KEY    = 'ucconnect_users';
-const SESSION_KEY  = 'ucconnect_session';
-const POSTS_KEY    = 'ucconnect_posts';
-const FOLLOWS_KEY  = 'ucconnect_follows';
-const NOTIFS_KEY   = 'ucconnect_notifs';
-const EVENTS_KEY   = 'ucconnect_events';
-const PROFILE_KEY  = 'ucconnect_profile'; // legacy, kept for messages.html
-
+const TOKEN_KEY    = 'ucconnect_token';
 const AVATAR_COLORS = ['#E00122','#0d0d0d','#2563eb','#059669','#7c3aed','#d97706','#0891b2','#be185d'];
 
 let currentUser  = null;
 let activeFilter = null;
 let homeTab      = 'all';
+let cachedPosts  = []; // posts cached from last API fetch for client-side filtering
 
 // ═══════════════════════════════════════════════
-// STORAGE HELPERS
+// API HELPER
 // ═══════════════════════════════════════════════
-const getUsers   = () => JSON.parse(localStorage.getItem(USERS_KEY)   || '[]');
-const saveUsers  = u  => localStorage.setItem(USERS_KEY, JSON.stringify(u));
-const getSession = () => JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
-const setSession = s  => localStorage.setItem(SESSION_KEY, JSON.stringify(s));
-const clearSession = ()=> localStorage.removeItem(SESSION_KEY);
-const getPosts   = () => JSON.parse(localStorage.getItem(POSTS_KEY)   || '[]');
-const savePosts  = p  => localStorage.setItem(POSTS_KEY, JSON.stringify(p));
-const getFollows = () => JSON.parse(localStorage.getItem(FOLLOWS_KEY) || '[]');
-const saveFollows= f  => localStorage.setItem(FOLLOWS_KEY, JSON.stringify(f));
-const getNotifs  = () => JSON.parse(localStorage.getItem(NOTIFS_KEY)  || '[]');
-const saveNotifs = n  => localStorage.setItem(NOTIFS_KEY, JSON.stringify(n));
+async function api(path, options = {}) {
+  const token = localStorage.getItem(TOKEN_KEY);
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(path, {
+    ...options,
+    headers: { ...headers, ...(options.headers || {}) }
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
 
 // ═══════════════════════════════════════════════
 // UTILS
 // ═══════════════════════════════════════════════
-function hashPassword(p) {
-  return btoa(unescape(encodeURIComponent(p + '_uc2024_salt')));
-}
-
 function timeAgo(ts) {
-  const d = Date.now() - ts;
+  const d = Date.now() - (typeof ts === 'string' ? new Date(ts).getTime() : ts);
   if (d < 60000)    return 'Just now';
   if (d < 3600000)  return Math.floor(d/60000)   + 'm ago';
   if (d < 86400000) return Math.floor(d/3600000) + 'h ago';
@@ -744,23 +735,25 @@ function showAuthError(id, msg) {
   el.classList.add('visible');
 }
 
-function doLogin() {
+async function doLogin() {
   const email    = document.getElementById('loginEmail').value.trim().toLowerCase();
   const password = document.getElementById('loginPassword').value;
   if (!email || !password) { showAuthError('loginError','Please fill in all fields.'); return; }
 
-  const users = getUsers();
-  const user  = users.find(u => u.email === email);
-  if (!user || user.passwordHash !== hashPassword(password)) {
-    showAuthError('loginError','Invalid email or password.'); return;
+  try {
+    const { token, user } = await api('/api/auth', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'login', email, password })
+    });
+    localStorage.setItem(TOKEN_KEY, token);
+    currentUser = user;
+    onAuthSuccess();
+  } catch (err) {
+    showAuthError('loginError', err.message);
   }
-
-  setSession({ userId: user.id });
-  currentUser = user;
-  onAuthSuccess();
 }
 
-function doSignup() {
+async function doSignup() {
   const name     = document.getElementById('signupName').value.trim();
   const username = document.getElementById('signupUsername').value.trim().toLowerCase().replace(/\s+/g,'');
   const email    = document.getElementById('signupEmail').value.trim().toLowerCase();
@@ -771,50 +764,40 @@ function doSignup() {
   if (!name || !username || !email || !password) { showAuthError('signupError','Please fill in all required fields.'); return; }
   if (password.length < 6) { showAuthError('signupError','Password must be at least 6 characters.'); return; }
 
-  const users = getUsers();
-  if (users.find(u => u.email === email))    { showAuthError('signupError','That email is already registered.'); return; }
-  if (users.find(u => u.username === username)) { showAuthError('signupError','That username is taken.'); return; }
-
-  const user = {
-    id: 'user_' + Date.now(),
-    name, username, email,
-    passwordHash: hashPassword(password),
-    major, year, bio: '',
-    avatarColor: AVATAR_COLORS[0],
-    createdAt: Date.now()
-  };
-  users.push(user);
-  saveUsers(users);
-  setSession({ userId: user.id });
-  currentUser = user;
-  onAuthSuccess();
+  try {
+    const { token, user } = await api('/api/auth', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'signup', name, username, email, password, major, year })
+    });
+    localStorage.setItem(TOKEN_KEY, token);
+    currentUser = user;
+    onAuthSuccess();
+  } catch (err) {
+    showAuthError('signupError', err.message);
+  }
 }
 
 function doLogout() {
-  clearSession();
+  localStorage.removeItem(TOKEN_KEY);
   currentUser = null;
+  cachedPosts = [];
   closeProfileModal();
   document.getElementById('authModal').classList.remove('hidden');
   document.getElementById('loginEmail').value = '';
   document.getElementById('loginPassword').value = '';
+  document.getElementById('navAvatar').textContent = '?';
+  document.getElementById('navAvatar').style.background = 'var(--red)';
+  document.getElementById('navName').textContent = 'Guest';
+  document.getElementById('navRole').textContent = 'UC Student';
+  document.getElementById('composerAvatar').textContent = '?';
+  document.getElementById('composerAvatar').style.background = 'var(--gray-400)';
 }
 
 function onAuthSuccess() {
   document.getElementById('authModal').classList.add('hidden');
-  syncLegacyProfile();
   applyCurrentUser();
   updateNotifBadge();
   renderCurrentView();
-}
-
-function syncLegacyProfile() {
-  if (!currentUser) return;
-  localStorage.setItem(PROFILE_KEY, JSON.stringify({
-    name: currentUser.name,
-    major: currentUser.major,
-    year: currentUser.year,
-    avatarColor: currentUser.avatarColor
-  }));
 }
 
 function applyCurrentUser() {
@@ -854,7 +837,7 @@ function showView(viewName, linkEl) {
 }
 
 function renderCurrentView() {
-  if (currentView === 'home')               renderHomePosts();
+  if (currentView === 'home')               loadAndRenderHome();
   else if (currentView === 'following')     renderFollowing();
   else if (currentView === 'bookmarks')     renderBookmarks();
   else if (currentView === 'departments')   renderDepartments();
@@ -870,7 +853,7 @@ let selectedAvatarColor = null;
 
 function openProfileModal(e) {
   e.preventDefault();
-  if (!currentUser) return;
+  if (!currentUser) { requireAuth(); return; }
   selectedAvatarColor = currentUser.avatarColor;
 
   document.getElementById('editName').value     = currentUser.name;
@@ -879,7 +862,6 @@ function openProfileModal(e) {
   document.getElementById('editMajor').value    = currentUser.major || '';
   document.getElementById('editYear').value     = currentUser.year || '';
 
-  // Build color swatches
   const picker = document.getElementById('colorPicker');
   picker.innerHTML = '';
   AVATAR_COLORS.forEach(c => {
@@ -902,7 +884,7 @@ function closeProfileModal() {
   document.getElementById('profileModal').classList.add('hidden');
 }
 
-function saveProfileSettings() {
+async function saveProfileSettings() {
   const name     = document.getElementById('editName').value.trim();
   const username = document.getElementById('editUsername').value.trim().toLowerCase();
   const bio      = document.getElementById('editBio').value.trim();
@@ -911,53 +893,33 @@ function saveProfileSettings() {
 
   if (!name) { showToast('Name cannot be empty.', 'warn'); return; }
 
-  const users = getUsers();
-  const idx   = users.findIndex(u => u.id === currentUser.id);
-  if (idx === -1) return;
-
-  // Check username uniqueness
-  const conflict = users.find(u => u.username === username && u.id !== currentUser.id);
-  if (conflict) { showToast('Username already taken.', 'warn'); return; }
-
-  users[idx] = { ...users[idx], name, username, bio, major, year, avatarColor: selectedAvatarColor };
-  saveUsers(users);
-  currentUser = users[idx];
-  syncLegacyProfile();
-  applyCurrentUser();
-  closeProfileModal();
-  showToast('Profile updated!');
-  renderCurrentView();
+  try {
+    const { user } = await api('/api/profile', {
+      method: 'PUT',
+      body: JSON.stringify({ name, username, bio, major, year, avatarColor: selectedAvatarColor })
+    });
+    currentUser = user;
+    applyCurrentUser();
+    closeProfileModal();
+    showToast('Profile updated!');
+    renderCurrentView();
+  } catch (err) {
+    showToast(err.message, 'warn');
+  }
 }
 
 // ═══════════════════════════════════════════════
 // POST CARD
 // ═══════════════════════════════════════════════
-function isLikedByMe(post) {
-  if (!currentUser) return false;
-  if (Array.isArray(post.likedBy)) return post.likedBy.includes(currentUser.id);
-  return !!post.liked; // legacy
-}
-
-function isBookmarkedByMe(post) {
-  if (!currentUser) return false;
-  if (Array.isArray(post.bookmarkedBy)) return post.bookmarkedBy.includes(currentUser.id);
-  return !!post.bookmarked; // legacy
-}
-
-function isFollowing(authorName) {
-  if (!currentUser) return false;
-  return getFollows().some(f => f.followerId === currentUser.id && f.followingName === authorName);
-}
-
 function buildPostCard(post) {
   const card = document.createElement('div');
   card.className = 'post-card';
   card.dataset.id = post.id;
 
-  const liked      = isLikedByMe(post);
-  const bookmarked = isBookmarkedByMe(post);
-  const isMyPost   = currentUser && (post.authorId === currentUser.id || post.author === currentUser.name);
-  const following  = isFollowing(post.author);
+  const liked      = post.isLiked;
+  const bookmarked = post.isBookmarked;
+  const following  = post.isFollowing;
+  const isMyPost   = post.isMyPost;
 
   const commentsHtml = (post.comments || []).map(c => `
     <div class="comment-item">
@@ -965,13 +927,13 @@ function buildPostCard(post) {
       <div class="comment-bubble">
         <div class="comment-author">${escapeHtml(c.author)}</div>
         <div class="comment-text">${escapeHtml(c.content)}</div>
-        <div class="comment-time">${timeAgo(c.ts)}</div>
+        <div class="comment-time">${timeAgo(c.createdAt)}</div>
       </div>
     </div>`).join('');
 
   const followBtn = !isMyPost ? `
     <button class="follow-btn${following ? ' following' : ''}" id="fb-${post.id}"
-      onclick="toggleFollow('${escapeHtml(post.author)}','${post.id}',this)">
+      onclick="toggleFollow('${post.authorId}','${escapeHtml(post.author)}',this)">
       ${following ? 'Following' : '+ Follow'}
     </button>` : '';
 
@@ -980,20 +942,20 @@ function buildPostCard(post) {
       <div class="post-avatar" style="background:${post.avatarColor || '#E00122'}">${escapeHtml(post.author.charAt(0).toUpperCase())}</div>
       <div class="post-meta">
         <div class="post-author">${escapeHtml(post.author)}</div>
-        <div class="post-time">${timeAgo(post.ts)}</div>
+        <div class="post-time">${timeAgo(post.createdAt)}</div>
       </div>
       <span class="post-dept">${escapeHtml(post.dept || 'Student')}</span>
       ${followBtn}
     </div>
     ${post.content ? `<div class="post-body">${escapeHtml(post.content).replace(/\n/g,'<br>')}</div>` : ''}
-    ${post.photo   ? `<img class="post-image" src="${post.photo}" alt="Post image" loading="lazy" />` : ''}
+    ${post.photoUrl ? `<img class="post-image" src="${post.photoUrl}" alt="Post image" loading="lazy" />` : ''}
     <div class="post-footer">
       <button class="action-btn${liked ? ' liked' : ''}" onclick="toggleLike('${post.id}',this)">
         <i class="${liked ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
-        <span>${Array.isArray(post.likedBy) ? post.likedBy.length : (post.likes || 0)}</span>
+        <span>${post.likesCount || 0}</span>
       </button>
       <button class="action-btn" onclick="toggleComments('${post.id}',this)">
-        <i class="fa-regular fa-comment"></i><span>${(post.comments||[]).length}</span>
+        <i class="fa-regular fa-comment"></i><span>${post.commentsCount || 0}</span>
       </button>
       <div class="action-spacer"></div>
       <button class="action-btn${bookmarked ? ' bookmarked' : ''}" onclick="toggleBookmark('${post.id}',this)">
@@ -1028,11 +990,21 @@ function renderPostsInto(containerId, posts, emptyMsg) {
 // ═══════════════════════════════════════════════
 // HOME VIEW
 // ═══════════════════════════════════════════════
+async function loadAndRenderHome() {
+  try {
+    const { posts } = await api('/api/posts');
+    cachedPosts = posts;
+  } catch (err) {
+    console.error('Failed to load posts:', err);
+  }
+  renderHomePosts();
+}
+
 function renderHomePosts() {
-  let posts = getPosts().reverse();
+  let posts = [...cachedPosts];
   const search = document.getElementById('searchInput').value.trim().toLowerCase();
   if (search) posts = posts.filter(p => (p.content || '').toLowerCase().includes(search) || p.author.toLowerCase().includes(search));
-  if (activeFilter) posts = posts.filter(p => (p.content || '').toLowerCase().includes(activeFilter.toLowerCase()) || (p.tags||[]).includes(activeFilter));
+  if (activeFilter) posts = posts.filter(p => (p.content || '').toLowerCase().includes(activeFilter.toLowerCase()));
   if (homeTab === 'dept' && currentUser?.major) posts = posts.filter(p => p.dept === currentUser.major);
   renderPostsInto('postsContainer', posts, activeFilter ? 'No posts found for this topic.' : 'No posts yet. Be the first to post!');
 }
@@ -1073,57 +1045,46 @@ document.getElementById('searchInput').addEventListener('input', () => { if (cur
 // ═══════════════════════════════════════════════
 // POST ACTIONS
 // ═══════════════════════════════════════════════
-function toggleLike(id, btn) {
-  if (!currentUser) { showToast('Sign in to like posts.', 'warn'); return; }
-  const posts = getPosts();
-  const post  = posts.find(p => p.id === id);
-  if (!post) return;
-
-  if (!Array.isArray(post.likedBy)) post.likedBy = post.liked ? ['legacy'] : [];
-  const alreadyLiked = post.likedBy.includes(currentUser.id);
-
-  if (alreadyLiked) {
-    post.likedBy = post.likedBy.filter(uid => uid !== currentUser.id);
-  } else {
-    post.likedBy.push(currentUser.id);
-    // Notification for post author
-    if (post.author !== currentUser.name) {
-      addNotification('like', currentUser.name, currentUser.avatarColor, post.author, post.id, post.content || '');
-    }
+async function toggleLike(id, btn) {
+  if (!currentUser) { requireAuth(); return; }
+  btn.disabled = true;
+  try {
+    const { liked, count } = await api('/api/like', {
+      method: 'POST',
+      body: JSON.stringify({ postId: id })
+    });
+    const icon = btn.querySelector('i');
+    const span = btn.querySelector('span');
+    btn.classList.toggle('liked', liked);
+    icon.className = liked ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+    span.textContent = count;
+    // Update cache
+    const p = cachedPosts.find(x => x.id === id);
+    if (p) { p.isLiked = liked; p.likesCount = count; }
+  } catch (err) {
+    showToast('Could not update like.', 'warn');
   }
-  post.likes = post.likedBy.length;
-  savePosts(posts);
-
-  const icon = btn.querySelector('i');
-  const span = btn.querySelector('span');
-  const nowLiked = post.likedBy.includes(currentUser.id);
-  btn.classList.toggle('liked', nowLiked);
-  icon.className = nowLiked ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
-  span.textContent = post.likedBy.length;
+  btn.disabled = false;
 }
 
-function toggleBookmark(id, btn) {
-  if (!currentUser) { showToast('Sign in to bookmark posts.', 'warn'); return; }
-  const posts = getPosts();
-  const post  = posts.find(p => p.id === id);
-  if (!post) return;
-
-  if (!Array.isArray(post.bookmarkedBy)) post.bookmarkedBy = post.bookmarked ? ['legacy'] : [];
-  const alreadyBookmarked = post.bookmarkedBy.includes(currentUser.id);
-
-  if (alreadyBookmarked) {
-    post.bookmarkedBy = post.bookmarkedBy.filter(uid => uid !== currentUser.id);
-  } else {
-    post.bookmarkedBy.push(currentUser.id);
+async function toggleBookmark(id, btn) {
+  if (!currentUser) { requireAuth(); return; }
+  btn.disabled = true;
+  try {
+    const { bookmarked } = await api('/api/bookmark', {
+      method: 'POST',
+      body: JSON.stringify({ postId: id })
+    });
+    const icon = btn.querySelector('i');
+    btn.classList.toggle('bookmarked', bookmarked);
+    icon.className = bookmarked ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark';
+    if (bookmarked) showToast('Saved to bookmarks!');
+    const p = cachedPosts.find(x => x.id === id);
+    if (p) p.isBookmarked = bookmarked;
+  } catch (err) {
+    showToast('Could not update bookmark.', 'warn');
   }
-  post.bookmarked = post.bookmarkedBy.includes(currentUser.id);
-  savePosts(posts);
-
-  const icon = btn.querySelector('i');
-  const nowBookmarked = post.bookmarkedBy.includes(currentUser.id);
-  btn.classList.toggle('bookmarked', nowBookmarked);
-  icon.className = nowBookmarked ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark';
-  if (nowBookmarked) showToast('Saved to bookmarks!');
+  btn.disabled = false;
 }
 
 function toggleComments(id) {
@@ -1132,77 +1093,77 @@ function toggleComments(id) {
   if (section.classList.contains('open')) document.getElementById('cinput-' + id)?.focus();
 }
 
-function submitComment(id) {
-  if (!currentUser) { showToast('Sign in to comment.', 'warn'); return; }
+async function submitComment(id) {
+  if (!currentUser) { requireAuth(); return; }
   const input = document.getElementById('cinput-' + id);
   const text  = input.value.trim();
   if (!text) return;
-
-  const posts = getPosts();
-  const post  = posts.find(p => p.id === id);
-  if (!post) return;
-
-  const comment = { author: currentUser.name, content: text, ts: Date.now(), avatarColor: currentUser.avatarColor };
-  if (!Array.isArray(post.comments)) post.comments = [];
-  post.comments.push(comment);
-  savePosts(posts);
   input.value = '';
 
-  // Update DOM
-  const clist = document.getElementById('clist-' + id);
-  const noComment = clist.querySelector('.no-comments');
-  if (noComment) noComment.remove();
-  const el = document.createElement('div');
-  el.className = 'comment-item';
-  el.innerHTML = `
-    <div class="comment-avatar" style="background:${comment.avatarColor}">${escapeHtml(comment.author.charAt(0).toUpperCase())}</div>
-    <div class="comment-bubble">
-      <div class="comment-author">${escapeHtml(comment.author)}</div>
-      <div class="comment-text">${escapeHtml(comment.content)}</div>
-      <div class="comment-time">Just now</div>
-    </div>`;
-  clist.appendChild(el);
+  try {
+    const { comment } = await api('/api/comment', {
+      method: 'POST',
+      body: JSON.stringify({ postId: id, content: text })
+    });
 
-  // Update count
-  const card = document.querySelector(`.post-card[data-id="${id}"]`);
-  if (card) {
-    const commentBtn = card.querySelectorAll('.action-btn')[1];
-    if (commentBtn) commentBtn.querySelector('span').textContent = post.comments.length;
-  }
+    const clist = document.getElementById('clist-' + id);
+    const noComment = clist.querySelector('.no-comments');
+    if (noComment) noComment.remove();
+    const el = document.createElement('div');
+    el.className = 'comment-item';
+    el.innerHTML = `
+      <div class="comment-avatar" style="background:${comment.avatarColor || '#0d0d0d'}">${escapeHtml(comment.author.charAt(0).toUpperCase())}</div>
+      <div class="comment-bubble">
+        <div class="comment-author">${escapeHtml(comment.author)}</div>
+        <div class="comment-text">${escapeHtml(comment.content)}</div>
+        <div class="comment-time">Just now</div>
+      </div>`;
+    clist.appendChild(el);
 
-  // Notification
-  if (post.author !== currentUser.name) {
-    addNotification('comment', currentUser.name, currentUser.avatarColor, post.author, post.id, post.content || '');
+    const card = document.querySelector(`.post-card[data-id="${id}"]`);
+    if (card) {
+      const commentBtn = card.querySelectorAll('.action-btn')[1];
+      if (commentBtn) {
+        const span = commentBtn.querySelector('span');
+        if (span) span.textContent = parseInt(span.textContent || '0') + 1;
+      }
+    }
+    const p = cachedPosts.find(x => x.id === id);
+    if (p) p.commentsCount = (p.commentsCount || 0) + 1;
+  } catch (err) {
+    showToast('Could not post comment.', 'warn');
   }
 }
 
-function toggleFollow(authorName, postId, btn) {
-  if (!currentUser) { showToast('Sign in to follow.', 'warn'); return; }
-  let follows = getFollows();
-  const idx = follows.findIndex(f => f.followerId === currentUser.id && f.followingName === authorName);
-
-  if (idx !== -1) {
-    follows.splice(idx, 1);
-    btn.textContent = '+ Follow';
-    btn.classList.remove('following');
-    showToast('Unfollowed ' + authorName);
-  } else {
-    follows.push({ followerId: currentUser.id, followingName: authorName });
-    btn.textContent = 'Following';
-    btn.classList.add('following');
-    showToast('Now following ' + authorName + '!');
+async function toggleFollow(authorId, authorName, btn) {
+  if (!currentUser) { requireAuth(); return; }
+  btn.disabled = true;
+  try {
+    const { following } = await api('/api/follow', {
+      method: 'POST',
+      body: JSON.stringify({ userId: authorId })
+    });
+    btn.textContent = following ? 'Following' : '+ Follow';
+    btn.classList.toggle('following', following);
+    showToast(following ? 'Now following ' + authorName + '!' : 'Unfollowed ' + authorName);
+    // Update all follow buttons for this author across the page
+    document.querySelectorAll(`button[id^="fb-"]`).forEach(b => {
+      if (b !== btn) {
+        const postId = b.id.replace('fb-', '');
+        const p = cachedPosts.find(x => x.id === postId);
+        if (p && p.authorId === authorId) {
+          p.isFollowing = following;
+          b.textContent = following ? 'Following' : '+ Follow';
+          b.classList.toggle('following', following);
+        }
+      }
+    });
+    const p = cachedPosts.find(x => x.id === btn.id.replace('fb-', ''));
+    if (p) p.isFollowing = following;
+  } catch (err) {
+    showToast('Could not update follow.', 'warn');
   }
-  saveFollows(follows);
-  // Update all follow buttons for this author
-  document.querySelectorAll(`button[id^="fb-"]`).forEach(b => {
-    const pId = b.id.replace('fb-', '');
-    const p = getPosts().find(x => x.id === pId);
-    if (p && p.author === authorName && b.id !== 'fb-' + postId) {
-      const nowFollowing = follows.some(f => f.followerId === currentUser.id && f.followingName === authorName);
-      b.textContent = nowFollowing ? 'Following' : '+ Follow';
-      b.classList.toggle('following', nowFollowing);
-    }
-  });
+  btn.disabled = false;
 }
 
 // ═══════════════════════════════════════════════
@@ -1230,30 +1191,23 @@ document.getElementById('removePhoto').addEventListener('click', () => {
   document.getElementById('photo-input').value = '';
 });
 
-document.getElementById('postBtn').addEventListener('click', () => {
+document.getElementById('postBtn').addEventListener('click', async () => {
   if (!currentUser) { requireAuth(); return; }
   const content = document.getElementById('postMessage').value.trim();
   if (!content && !selectedPhoto) { showToast('Write something before posting!', 'warn'); return; }
 
+  const btn = document.getElementById('postBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Posting...';
+
   try {
-    const post = {
-      id: 'post_' + Date.now(),
-      authorId: currentUser.id,
-      author: currentUser.name,
-      dept: currentUser.major || 'Student',
-      content,
-      photo: selectedPhoto,
-      avatarColor: currentUser.avatarColor,
-      ts: Date.now(),
-      likes: 0,
-      likedBy: [],
-      bookmarkedBy: [],
-      comments: [],
-      tags: []
-    };
-    const posts = getPosts();
-    posts.push(post);
-    savePosts(posts);
+    const { post } = await api('/api/posts', {
+      method: 'POST',
+      body: JSON.stringify({ content, photoUrl: selectedPhoto || null })
+    });
+
+    // Prepend to cache and re-render
+    cachedPosts.unshift(post);
     renderHomePosts();
 
     document.getElementById('postMessage').value = '';
@@ -1264,8 +1218,11 @@ document.getElementById('postBtn').addEventListener('click', () => {
     showToast('Post shared! 🐾');
   } catch(err) {
     console.error('Post error:', err);
-    showToast('Something went wrong. Please try again.', 'warn');
+    showToast(err.message || 'Something went wrong.', 'warn');
   }
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Post';
 });
 
 document.getElementById('postMessage').addEventListener('keydown', e => {
@@ -1275,24 +1232,31 @@ document.getElementById('postMessage').addEventListener('keydown', e => {
 // ═══════════════════════════════════════════════
 // FOLLOWING VIEW
 // ═══════════════════════════════════════════════
-function renderFollowing() {
+async function renderFollowing() {
   if (!currentUser) return;
-  const follows    = getFollows().filter(f => f.followerId === currentUser.id);
-  const following  = new Set(follows.map(f => f.followingName));
-  const posts      = getPosts().reverse().filter(p => following.has(p.author));
-  renderPostsInto('followingContainer', posts, "You're not following anyone yet. Follow people from the home feed!");
+  const container = document.getElementById('followingContainer');
+  container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading...</p></div>';
+  try {
+    const { posts } = await api('/api/follow');
+    renderPostsInto('followingContainer', posts, "You're not following anyone yet. Follow people from the home feed!");
+  } catch (err) {
+    container.innerHTML = '<div class="view-empty"><i class="fa-solid fa-triangle-exclamation"></i><h3>Error</h3><p>Could not load following feed.</p></div>';
+  }
 }
 
 // ═══════════════════════════════════════════════
 // BOOKMARKS VIEW
 // ═══════════════════════════════════════════════
-function renderBookmarks() {
+async function renderBookmarks() {
   if (!currentUser) return;
-  const posts = getPosts().reverse().filter(p => {
-    if (Array.isArray(p.bookmarkedBy)) return p.bookmarkedBy.includes(currentUser.id);
-    return !!p.bookmarked;
-  });
-  renderPostsInto('bookmarksContainer', posts, "You haven't bookmarked any posts yet.");
+  const container = document.getElementById('bookmarksContainer');
+  container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading...</p></div>';
+  try {
+    const { posts } = await api('/api/bookmark');
+    renderPostsInto('bookmarksContainer', posts, "You haven't bookmarked any posts yet.");
+  } catch (err) {
+    container.innerHTML = '<div class="view-empty"><i class="fa-solid fa-triangle-exclamation"></i><h3>Error</h3><p>Could not load bookmarks.</p></div>';
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -1312,8 +1276,8 @@ const DEPARTMENTS = [
 ];
 
 function renderDepartments() {
-  const posts  = getPosts();
-  const grid   = document.getElementById('deptGrid');
+  const posts = cachedPosts;
+  const grid  = document.getElementById('deptGrid');
   grid.innerHTML = '';
   DEPARTMENTS.forEach(dept => {
     const count = posts.filter(p => p.dept === dept.name).length;
@@ -1323,14 +1287,19 @@ function renderDepartments() {
       <div class="dept-card-icon"><i class="fa-solid ${dept.icon}"></i></div>
       <div class="dept-card-name">${escapeHtml(dept.name)}</div>
       <div class="dept-card-count">${count} post${count!==1?'s':''}</div>`;
-    card.onclick = () => {
+    card.onclick = async () => {
       showView('home', document.getElementById('nav-home'));
       activeFilter = null;
       homeTab = 'all';
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelector('.tab-btn').classList.add('active');
-      const posts2 = getPosts().reverse().filter(p => p.dept === dept.name);
-      renderPostsInto('postsContainer', posts2, 'No posts from this department yet.');
+      // Re-fetch posts filtered by dept
+      try {
+        const { posts: deptPosts } = await api('/api/posts?dept=' + encodeURIComponent(dept.name));
+        renderPostsInto('postsContainer', deptPosts, 'No posts from this department yet.');
+      } catch (err) {
+        renderPostsInto('postsContainer', [], 'Could not load department posts.');
+      }
     };
     grid.appendChild(card);
   });
@@ -1375,68 +1344,54 @@ function renderEvents() {
 // ═══════════════════════════════════════════════
 // NOTIFICATIONS
 // ═══════════════════════════════════════════════
-function addNotification(type, fromName, fromAvatarColor, toAuthorName, postId, postContent) {
-  // Find toUserId by author name
-  const users  = getUsers();
-  const toUser = users.find(u => u.name === toAuthorName);
-  if (!toUser) return;
-
-  const notifs = getNotifs();
-  notifs.push({
-    id: 'notif_' + Date.now(),
-    type,
-    fromName,
-    fromAvatarColor,
-    toUserId: toUser.id,
-    postId,
-    postSnippet: (postContent || '').substring(0, 60),
-    ts: Date.now(),
-    read: false
-  });
-  saveNotifs(notifs);
-  updateNotifBadge();
+async function updateNotifBadge() {
+  if (!currentUser) return;
+  try {
+    const { unreadCount } = await api('/api/notifications');
+    const badge = document.getElementById('notifBadge');
+    badge.style.display = unreadCount > 0 ? 'inline' : 'none';
+    badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+  } catch (err) { /* silent */ }
 }
 
-function updateNotifBadge() {
+async function markNotifsRead() {
   if (!currentUser) return;
-  const count = getNotifs().filter(n => n.toUserId === currentUser.id && !n.read).length;
-  const badge = document.getElementById('notifBadge');
-  badge.style.display = count > 0 ? 'inline' : 'none';
-  badge.textContent = count > 9 ? '9+' : count;
+  try {
+    await api('/api/notifications', { method: 'PUT' });
+    document.getElementById('notifBadge').style.display = 'none';
+  } catch (err) { /* silent */ }
 }
 
-function markNotifsRead() {
+async function renderNotifications() {
   if (!currentUser) return;
-  const notifs = getNotifs().map(n => n.toUserId === currentUser.id ? { ...n, read: true } : n);
-  saveNotifs(notifs);
-  updateNotifBadge();
-}
-
-function renderNotifications() {
-  if (!currentUser) return;
-  const list   = document.getElementById('notifsList');
-  const notifs = getNotifs().filter(n => n.toUserId === currentUser.id).reverse();
-  list.innerHTML = '';
-  if (!notifs.length) {
-    list.innerHTML = `<div class="view-empty"><i class="fa-solid fa-bell"></i><h3>All quiet</h3><p>You'll see notifications when people like or comment on your posts.</p></div>`;
-    return;
+  const list = document.getElementById('notifsList');
+  list.innerHTML = '<div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><p>Loading...</p></div>';
+  try {
+    const { notifications } = await api('/api/notifications');
+    list.innerHTML = '';
+    if (!notifications.length) {
+      list.innerHTML = `<div class="view-empty"><i class="fa-solid fa-bell"></i><h3>All quiet</h3><p>You'll see notifications when people like or comment on your posts.</p></div>`;
+      return;
+    }
+    notifications.forEach(n => {
+      const item = document.createElement('div');
+      item.className = 'notif-item' + (n.read ? '' : ' unread');
+      const isLike = n.type === 'like';
+      const iconBg = isLike ? '#e0315a' : '#2563eb';
+      const iconCls= isLike ? 'fa-heart' : 'fa-comment';
+      const verb   = isLike ? 'liked your post' : 'commented on your post';
+      item.innerHTML = `
+        <div class="notif-icon" style="background:${iconBg}"><i class="fa-solid ${iconCls}"></i></div>
+        <div class="notif-body">
+          <div class="notif-text"><strong>${escapeHtml(n.fromName)}</strong> ${verb}</div>
+          ${n.postSnippet ? `<div class="notif-snippet">"${escapeHtml(n.postSnippet)}${n.postSnippet.length>=60?'…':''}"</div>` : ''}
+          <div class="notif-time">${timeAgo(n.createdAt)}</div>
+        </div>`;
+      list.appendChild(item);
+    });
+  } catch (err) {
+    list.innerHTML = '<div class="view-empty"><i class="fa-solid fa-triangle-exclamation"></i><h3>Error</h3><p>Could not load notifications.</p></div>';
   }
-  notifs.forEach(n => {
-    const item = document.createElement('div');
-    item.className = 'notif-item' + (n.read ? '' : ' unread');
-    const isLike = n.type === 'like';
-    const iconBg = isLike ? '#e0315a' : '#2563eb';
-    const iconCls= isLike ? 'fa-heart' : 'fa-comment';
-    const verb   = isLike ? 'liked your post' : 'commented on your post';
-    item.innerHTML = `
-      <div class="notif-icon" style="background:${iconBg}"><i class="fa-solid ${iconCls}"></i></div>
-      <div class="notif-body">
-        <div class="notif-text"><strong>${escapeHtml(n.fromName)}</strong> ${verb}</div>
-        ${n.postSnippet ? `<div class="notif-snippet">"${escapeHtml(n.postSnippet)}${n.postSnippet.length>=60?'…':''}"</div>` : ''}
-        <div class="notif-time">${timeAgo(n.ts)}</div>
-      </div>`;
-    list.appendChild(item);
-  });
 }
 
 // ═══════════════════════════════════════════════
@@ -1598,57 +1553,46 @@ function clearAIChat() {
 }
 
 // ═══════════════════════════════════════════════
-// SEED DATA
-// ═══════════════════════════════════════════════
-function seedDefaultPost() {
-  const posts = getPosts();
-  if (!posts.length) {
-    posts.push({
-      id: 'post_welcome',
-      authorId: 'system',
-      author: 'UCConnect Team',
-      dept: 'Official',
-      content: 'Welcome to UCConnect — the student communication platform for the University of Cincinnati. Share updates, connect with classmates, and stay plugged into campus life. Go Bearcats! 🐾',
-      photo: null,
-      avatarColor: '#0d0d0d',
-      ts: Date.now(),
-      likes: 24,
-      likedBy: [],
-      bookmarkedBy: [],
-      comments: []
-    });
-    savePosts(posts);
-  }
-}
-
-// ═══════════════════════════════════════════════
-// INIT
+// NAVIGATION (updated to handle async views)
 // ═══════════════════════════════════════════════
 function requireAuth() {
   document.getElementById('authModal').classList.remove('hidden');
 }
 
-function init() {
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+async function init() {
   try {
-    seedDefaultPost();
-
-    const session = getSession();
-    if (session) {
-      const users = getUsers();
-      currentUser = users.find(u => u.id === session.userId) || null;
+    // Try to restore session from JWT
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token) {
+      try {
+        const { user } = await api('/api/auth');
+        currentUser = user;
+        applyCurrentUser();
+        updateNotifBadge();
+      } catch (err) {
+        // Token invalid/expired — clear it
+        localStorage.removeItem(TOKEN_KEY);
+        currentUser = null;
+      }
     }
 
-    // Always render feed so content is visible
-    renderHomePosts();
+    // Always load and show the feed (visible even when logged out)
+    await loadAndRenderHome();
 
+    // Show auth modal if not logged in
     if (!currentUser) {
       document.getElementById('authModal').classList.remove('hidden');
-    } else {
-      applyCurrentUser();
-      updateNotifBadge();
     }
   } catch(err) {
     console.error('UCConnect init error:', err);
+    // Show feed even on error
+    renderHomePosts();
+    if (!currentUser) {
+      document.getElementById('authModal').classList.remove('hidden');
+    }
   }
 }
 
